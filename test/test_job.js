@@ -1,10 +1,12 @@
 var assert = require('assert');
-var mongoose = require('mongoose');
+var helpers = require('./helpers');
 var Job = require('../lib/job');
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/monq_tests');
-
 describe('Job', function() {
+    before(function() {
+        helpers.connect();
+    });
+
     beforeEach(function(done) {
         Job.remove(done);
     });
@@ -35,7 +37,7 @@ describe('Job', function() {
 
         it('has an enqueued date', function() {
             assert.ok(job.enqueued);
-            assert.ok(job.enqueued < Date.now());
+            assert.ok(job.enqueued <= Date.now());
         });
 
         it('has `queued` status', function() {
@@ -93,7 +95,7 @@ describe('Job', function() {
 
         it('has an ended time', function() {
             assert.ok(job.ended);
-            assert.ok(job.ended < Date.now());
+            assert.ok(job.ended <= Date.now());
         });
 
         it('has a `complete` status', function() {
@@ -115,7 +117,7 @@ describe('Job', function() {
 
         it('has an ended time', function() {
             assert.ok(job.ended);
-            assert.ok(job.ended < Date.now());
+            assert.ok(job.ended <= Date.now());
         });
 
         it('has a `failed` status', function() {
