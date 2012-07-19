@@ -1,10 +1,10 @@
 var assert = require('assert');
-var helpers = require('./helpers');
+var mongoose = require('mongoose');
 var Job = require('../lib/job');
 
 describe('Job', function() {
     before(function() {
-        helpers.connect();
+        mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/monq_tests');
     });
 
     beforeEach(function(done) {
