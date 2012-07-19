@@ -32,6 +32,8 @@ describe('Worker', function() {
         var job;
 
         beforeEach(function() {
+            var pubsub = { publish: function() {}};
+            worker = new Worker({ pubsub: pubsub });
             job = { queue: 'default' };
         });
 
