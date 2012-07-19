@@ -45,7 +45,7 @@ describe('Worker', function() {
         });
 
         it('publishes event to pubsub bus', function() {
-            var publish = sinon.spy(worker.pubsub, 'publish');
+            var publish = sinon.stub(worker.pubsub, 'publish');
 
             worker.publish('foo', job);
 

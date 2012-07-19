@@ -22,6 +22,7 @@ describe('Queue', function() {
             assert.equal(args[0], 'foo');
             assert.deepEqual(args[1], { bar: 'baz' });
             assert.equal(args[2], 'qux');
+            spy.restore();
             done();
         });
     });
@@ -36,6 +37,7 @@ describe('Queue', function() {
             var args = spy.getCall(0).args;
 
             assert.equal(args[0], 'qux');
+            spy.restore();
             done();
         });
     });
