@@ -234,15 +234,15 @@ describe('Worker', function() {
             worker = new Worker();
 
             worker.register({
-                example: function(job, callback) {
-                    callback(null, 'foobar');
+                example: function(params, callback) {
+                    callback(null, params);
                 }
             });
         });
 
         it('passes job to registered callback', function(done) {
-            worker.process({ name: 'example' }, function(err, result) {
-                assert.equal(result, 'foobar');
+            worker.process({ name: 'example', params: { foo: 'bar' }}, function(err, result) {
+                assert.deepEqual(result, { foo: 'bar' });
                 done();
             });
         });
