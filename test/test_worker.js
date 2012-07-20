@@ -231,10 +231,16 @@ describe('Worker', function() {
 
     describe('when processing', function() {
         beforeEach(function() {
-            worker = new Worker({ path: ['abc/def', 'ghi/jkl', 'test/jobs'] });
+            worker = new Worker();
+
+            worker.register({
+                example: function(job, callback) {
+                    callback(null, 'foobar');
+                }
+            });
         });
 
-        it('passes job to processing function', function(done) {
+        it('passes job to registered callback', function(done) {
             worker.process({ name: 'example' }, function(err, result) {
                 assert.equal(result, 'foobar');
                 done();

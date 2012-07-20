@@ -2,7 +2,9 @@ var monq = require('../lib/index');
 
 monq.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/monq_example');
 
-var worker = monq.worker({ queues: ['foo', 'bar'], path: ['.', 'example'] });
+var worker = monq.worker({ queues: ['foo'] });
+
+worker.register({ uppercase: require('./uppercase') });
 
 worker.on('dequeued', function(job) {
     console.log('dequeued', job._id);
