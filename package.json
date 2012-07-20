@@ -1,6 +1,15 @@
 {
     "name": "monq",
     "version": "0.0.1",
+    "description": "MongoDB-backed job queue for Node.js",
+    "homepage": "http://github.com/scttnlsn/monq",
+    "author": "Scott Nelson <scottbnel@gmail.com>",
+    "main": "./lib/index",
+
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/scttnlsn/monq.git"
+    },
 
     "dependencies": {
         "mongoose": ">= 2.7.2",
