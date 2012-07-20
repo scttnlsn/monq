@@ -246,5 +246,12 @@ describe('Worker', function() {
                 done();
             });
         });
+
+        it('returns error if there is no registered callback', function(done) {
+            worker.process({ name: 'asdf' }, function(err, result) {
+                assert.ok(err);
+                done();
+            });
+        });
     });
 });
