@@ -6,7 +6,7 @@ Monq is a MongoDB-backed job queue for Node.js.
 Usage
 -----
 
-First, connect to MongoDB by specifying a URI or providing `host`, `port` and `database` options.
+Connect to MongoDB by specifying a URI or providing `host`, `port` and `database` options:
 
 ```javascript
 var monq = require('monq');
@@ -14,7 +14,7 @@ var monq = require('monq');
 monq.connect('mongodb://localhost:27017/monq_example');
 ```
     
-Enqueue jobs by supplying a job name and a set of parameters. Below, the job `reverse` is being placed into the `example` queue:
+Enqueue jobs by supplying a job name and a set of parameters.  Below, the job `reverse` is being placed into the `example` queue:
 
 ```javascript
 var queue = monq.queue('example');
@@ -24,7 +24,7 @@ queue.enqueue('reverse', { text: 'foobar' }, function(err, job) {
 });
 ```
 
-Create workers to process the jobs from one or more queues. The functions responsible for performing a job must be registered with each worker:
+Create workers to process the jobs from one or more queues.  The functions responsible for performing a job must be registered with each worker:
 
 ```javascript
 var worker = monq.worker({ queues: ['example'] });
@@ -55,7 +55,7 @@ worker.on('error', function(err) { … });
 Pub/sub
 -------
 
-Monq uses [Mubsub](http://github.com/scttnlsn/mubsub) to publish and subscribe to worker updates via Mongo's capped collections and tailable cursors.  This allows one to monitor the state of a job as it is being handled by a worker in another process.  Subscribe to job updates by supplying a job id:
+Monq uses [Mubsub](http://github.com/scttnlsn/mubsub) to publish and subscribe to worker updates via MongoDB's capped collections and tailable cursors.  This allows one to monitor the state of a job as it is being handled by a worker in another process.  Subscribe to job updates by supplying a job id:
 
 ```javascript
 monq.subscribe(id, function(err, info) {
@@ -71,7 +71,7 @@ More detailed API docs soon.
 Install
 -------
 
-    npm install
+    npm install monq
     
 Tests
 -----
