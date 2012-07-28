@@ -54,7 +54,6 @@ describe('Worker', function() {
             assert.ok(publish.calledOnce);
             assert.deepEqual(publish.getCall(0).args[0], {
                 event: 'foo',
-                queue: 'default',
                 job: job
             });
         });
