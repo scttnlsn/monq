@@ -7,8 +7,7 @@ var queue = monq.queue('foo');
 queue.enqueue('uppercase', { text: 'bar' }, function(err, job) {
     if (err) throw err;
 
-    monq.subscribe(job._id, function(err, info) {
-        if (err) throw err;
+    monq.subscribe(job._id, function(info) {
         console.log(info);
     });
 });
