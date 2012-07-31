@@ -58,7 +58,7 @@ Pub/sub
 Monq uses [Mubsub](http://github.com/scttnlsn/mubsub) to publish and subscribe to worker updates via MongoDB's capped collections and tailable cursors.  This allows one to monitor the state of a job as it is being handled by a worker in another process.  Subscribe to job updates by supplying a job id:
 
 ```javascript
-monq.subscribe(id, function(err, info) {
+monq.subscribe(id, function(info) {
     console.log(info.job);
 });
 ```
