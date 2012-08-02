@@ -1,17 +1,21 @@
 var assert = require('assert');
 var sinon = require('sinon');
-var Job = require('../lib/job');
 var Queue = require('../lib/queue');
+
+var jobs = {
+    enqueue: function() {},
+    dequeue: function() {}
+};
 
 describe('Queue', function() {
     var queue;
 
     beforeEach(function() {
-        queue = new Queue('qux');
+        queue = new Queue('qux', jobs);
     });
 
     it('enqueues jobs', function(done) {
-        var spy = sinon.stub(Job, 'enqueue').yields();
+        var spy = sinon.stub(jobs, 'enqueue').yields();
 
         queue.enqueue('foo', { bar: 'baz' }, function(err, job) {
             if (err) return done(err);
@@ -28,7 +32,7 @@ describe('Queue', function() {
     });
 
     it('dequeues jobs', function(done) {
-        var spy = sinon.stub(Job, 'dequeue').yields();
+        var spy = sinon.stub(jobs, 'dequeue').yields();
 
         queue.dequeue(function(err) {
             if (err) return done(err);

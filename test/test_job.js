@@ -1,6 +1,6 @@
 var assert = require('assert');
 var mongoose = require('mongoose');
-var Job = require('../lib/job');
+var Job = mongoose.model('Job', require('../lib/job'));
 
 describe('Job', function() {
     before(function() {

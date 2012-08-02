@@ -4,15 +4,22 @@ var Queue = require('../lib/queue');
 var Worker = require('../lib/worker');
 
 describe('Worker', function() {
-    var worker;
+    var pubsub, queues, worker;
 
     beforeEach(function() {
-        worker = new Worker();
-    });
+        pubsub = {
+            publish: function() {}
+        };
 
-    it('has default queue', function() {
-        assert.equal(worker.queues.length, 1);
-        assert.equal(worker.queues[0].name, 'default');
+        queues = ['foo', 'bar', 'baz'].map(function(name) {
+            return {
+                name: name,
+                enqueue: function() {},
+                dequeue: function() {}
+            };
+        });
+
+        worker = new Worker({ pubsub: pubsub, queues: queues });
     });
 
     it('has default polling interval', function() {
@@ -32,8 +39,6 @@ describe('Worker', function() {
         var job;
 
         beforeEach(function() {
-            var pubsub = { publish: function() {}};
-            worker = new Worker({ pubsub: pubsub });
             job = { queue: 'default' };
         });
 
@@ -60,10 +65,6 @@ describe('Worker', function() {
     });
 
     describe('when dequeuing', function() {
-        beforeEach(function() {
-            worker = new Worker({ queues: ['foo', 'bar', 'baz'] });
-        });
-
         it('cycles queues', function() {
             var foo = sinon.stub(worker.queues[0], 'dequeue').yields();
             var bar = sinon.stub(worker.queues[1], 'dequeue').yields();
@@ -84,13 +85,10 @@ describe('Worker', function() {
     });
 
     describe('when polling', function() {
-        beforeEach(function() {
-            worker = new Worker({ queues: ['foo', 'bar'] });
-        });
-
         describe('when error', function() {
             it('emits an `error` event', function(done) {
                 var error = new Error();
+                
                 sinon.stub(worker, 'dequeue').yields(error);
 
                 worker.on('error', function(err) {
@@ -108,6 +106,7 @@ describe('Worker', function() {
             beforeEach(function() {
                 job = { some: 'job' };
                 work = sinon.stub(worker, 'work');
+
                 sinon.stub(worker.queues[0], 'dequeue').yields(null, job);
             });
 
@@ -135,8 +134,10 @@ describe('Worker', function() {
 
             beforeEach(function() {
                 clock = sinon.useFakeTimers();
+
                 sinon.stub(worker.queues[0], 'dequeue').yields(null, null);
                 sinon.stub(worker.queues[1], 'dequeue').yields(null, null);
+                sinon.stub(worker.queues[2], 'dequeue').yields(null, null);
             });
 
             afterEach(function() {
@@ -148,7 +149,7 @@ describe('Worker', function() {
 
                 var poll = sinon.spy(worker, 'poll');
                 worker.stop();
-                clock.tick(5000);
+                clock.tick(worker.interval);
 
                 assert.ok(poll.calledOnce);
             });
@@ -230,8 +231,6 @@ describe('Worker', function() {
 
     describe('when processing', function() {
         beforeEach(function() {
-            worker = new Worker();
-
             worker.register({
                 example: function(params, callback) {
                     callback(null, params);
