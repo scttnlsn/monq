@@ -19,7 +19,7 @@ Enqueue jobs by supplying a job name and a set of parameters.  Below, the job `r
 var queue = client.queue('example');
 
 queue.enqueue('reverse', { text: 'foobar' }, function(err, job) {
-    console.log('enqueued:', job._id);
+    console.log('enqueued:', job.data);
 });
 ```
 
@@ -41,25 +41,31 @@ worker.register({
 
 worker.start();
 ```
+
+Events
+------
     
-Workers emit various events while processing jobs:
+Workers will emit various events while processing jobs:
 
 ```javascript
-worker.on('dequeued', function(job) { … });
-worker.on('failed', function(job) { … });
-worker.on('complete', function(job) { … });
+worker.on('dequeued', function(data) { … });
+worker.on('failed', function(data) { … });
+worker.on('complete', function(data) { … });
 worker.on('error', function(err) { … });
 ```
-    
-Pub/sub
--------
 
-Monq uses [Mubsub](http://github.com/scttnlsn/mubsub) to publish and subscribe to worker updates via MongoDB's capped collections and tailable cursors.  This allows one to monitor the state of a job as it is being handled by a worker in another process.  Subscribe to job updates by supplying a job id:
+A job will also emit events as it is being processed by a worker.  We can subscribe to all status changes by listening for a `status` event:
 
 ```javascript
-client.subscribe(id, function(info) {
-    console.log(info.job);
-});
+job.on('status', function(data) { ... });
+```
+
+Or for particular status changes:
+
+```javascript
+job.on('dequeued', function(data) { ... });
+job.on('failed', function(data) { ... });
+job.on('complete', function(data) { ... });
 ```
     
 API

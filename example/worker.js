@@ -5,19 +5,19 @@ var worker = client.worker(['foo']);
 
 worker.register({ uppercase: require('./uppercase') });
 
-worker.on('dequeued', function(job) {
+worker.on('dequeued', function(data) {
     console.log('Dequeued:');
-    console.log(job);
+    console.log(data);
 });
 
-worker.on('failed', function(job) {
+worker.on('failed', function(data) {
     console.log('Failed:');
-    console.log(job);
+    console.log(data);
 });
 
-worker.on('complete', function(job) {
+worker.on('complete', function(data) {
     console.log('Complete:');
-    console.log(job);
+    console.log(data);
 });
 
 worker.on('error', function(err) {
