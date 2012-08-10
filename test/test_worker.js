@@ -3,9 +3,16 @@ var sinon = require('sinon');
 var Worker = require('../lib/worker');
 
 describe('Worker', function() {
-    var queues, worker;
+    var job, queues, worker;
 
     beforeEach(function() {
+        job = {
+            data: {},
+            publish: function() {},
+            complete: function() {},
+            fail: function() {}
+        };
+
         queues = ['foo', 'bar', 'baz'].map(function(name) {
             return {
                 enqueue: function() {},
@@ -66,10 +73,9 @@ describe('Worker', function() {
         });
 
         describe('when job is available', function() {
-            var job, work;
+            var work;
 
             beforeEach(function() {
-                job = { data: {} };
                 work = sinon.stub(worker, 'work');
 
                 sinon.stub(worker.queues[0], 'dequeue').yields(null, job);
@@ -89,6 +95,14 @@ describe('Worker', function() {
                 });
 
                 worker.start();
+            });
+
+            it('publishes job', function() {
+                var spy = sinon.spy(job, 'publish');
+
+                worker.start();
+
+                assert.ok(spy.calledOnce);
             });
         });
 
@@ -121,11 +135,11 @@ describe('Worker', function() {
 
     describe('when working', function() {
         describe('when processing fails', function() {
-            var error, fail, job, poll;
+            var error, fail, poll;
 
             beforeEach(function() {
                 error = new Error();
-                job = { data: {}, fail: function() {}};
+                
                 fail = sinon.stub(job, 'fail').yields();
                 poll = sinon.spy(worker, 'poll');
 
@@ -148,6 +162,14 @@ describe('Worker', function() {
                 worker.work(job);
             });
 
+            it('publishes job', function() {
+                var spy = sinon.spy(job, 'publish');
+
+                worker.work(job);
+
+                assert.ok(spy.calledOnce);
+            });
+
             it('polls for a new job', function() {
                 worker.work(job);
 
@@ -156,10 +178,9 @@ describe('Worker', function() {
         });
 
         describe('when processing succeeds', function() {
-            var complete, job, poll;
+            var complete, poll;
 
             beforeEach(function() {
-                job = { complete: function() {}};
                 complete = sinon.stub(job, 'complete').yields();
                 poll = sinon.spy(worker, 'poll');
 
@@ -180,6 +201,14 @@ describe('Worker', function() {
                 });
 
                 worker.work(job);
+            });
+
+            it('publishes job', function() {
+                var spy = sinon.spy(job, 'publish');
+
+                worker.work(job);
+
+                assert.ok(spy.calledOnce);
             });
 
             it('polls for a new job', function() {

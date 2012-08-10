@@ -16,11 +16,12 @@ worker.on('failed', function(job) {
 });
 
 worker.on('complete', function(job) {
-    console.log('Complete');
+    console.log('Complete:');
     console.log(job);
 });
 
 worker.on('error', function(err) {
+    console.log('Error:');
     console.log(err);
     worker.stop();
 });

@@ -13,7 +13,7 @@
 
     "dependencies": {
         "mongoskin": ">= 0.3.7",
-        "mubsub": ">= 0.1.3"
+        "mubsub": "git://github.com/scttnlsn/mubsub.git#dev"
     },
 
     "devDependencies": {

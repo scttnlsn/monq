@@ -5,5 +5,8 @@ var queue = client.queue('foo');
 
 queue.enqueue('uppercase', { text: 'bar' }, function(err, job) {
     if (err) throw err;
-    process.exit();
+
+    job.on('status', function(data) {
+        console.log(data);
+    });
 });
