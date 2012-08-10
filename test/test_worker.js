@@ -1,6 +1,5 @@
 var assert = require('assert');
 var sinon = require('sinon');
-var Queue = require('../lib/queue');
 var Worker = require('../lib/worker');
 
 describe('Worker', function() {

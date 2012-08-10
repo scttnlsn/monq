@@ -26,7 +26,7 @@ queue.enqueue('reverse', { text: 'foobar' }, function(err, job) {
 Create workers to process the jobs from one or more queues.  The functions responsible for performing a job must be registered with each worker:
 
 ```javascript
-var worker = client.worker({ queues: ['example'] });
+var worker = client.worker(['example']);
 
 worker.register({
     reverse: function(params, callback) {
@@ -46,7 +46,7 @@ Workers emit various events while processing jobs:
 
 ```javascript
 worker.on('dequeued', function(job) { … });
-worker.on('fail', function(job) { … });
+worker.on('failed', function(job) { … });
 worker.on('complete', function(job) { … });
 worker.on('error', function(err) { … });
 ```
