@@ -1,48 +1,86 @@
 var assert = require('assert');
-var sinon = require('sinon');
+var helpers = require('./helpers');
 var Queue = require('../lib/queue');
 
-var jobs = {
-    enqueue: function() {},
-    dequeue: function() {}
-};
-
-describe('Queue', function() {
+describe('queue', function() {
     var queue;
 
     beforeEach(function() {
-        queue = new Queue('qux', jobs);
+        queue = new Queue({ db: helpers.db });
     });
 
-    it('enqueues jobs', function(done) {
-        var spy = sinon.stub(jobs, 'enqueue').yields();
+    afterEach(function(done) {
+        queue.collection.remove({}, done);
+    });
 
-        queue.enqueue('foo', { bar: 'baz' }, function(err, job) {
-            if (err) return done(err);
+    describe('when enqueueing', function() {
+        var job;
 
-            assert.ok(spy.calledOnce);
-            var args = spy.getCall(0).args;
+        beforeEach(function(done) {
+            queue.enqueue('foo', { bar: 'baz' }, function(err, j) {
+                if (err) return done(err);
 
-            assert.equal(args[0], 'foo');
-            assert.deepEqual(args[1], { bar: 'baz' });
-            assert.equal(args[2], 'qux');
-            spy.restore();
-            done();
+                job = j;
+                done();
+            });
+        });
+
+        it('has a name', function() {
+            assert.equal(job.data.name, 'foo');
+        });
+
+        it('has a queue', function() {
+            assert.equal(job.data.queue, 'default');
+        });
+
+        it('has params', function() {
+            assert.deepEqual(job.data.params, { bar: 'baz' });
+        });
+
+        it('has an enqueued date', function() {
+            assert.ok(job.data.enqueued);
+            assert.ok(job.data.enqueued <= Date.now());
+        });
+
+        it('has `queued` status', function() {
+            assert.equal(job.data.status, 'queued');
         });
     });
 
-    it('dequeues jobs', function(done) {
-        var spy = sinon.stub(jobs, 'dequeue').yields();
+    describe('when dequeueing', function() {
+        var job;
 
-        queue.dequeue(function(err) {
-            if (err) return done(err);
+        beforeEach(function(done) {
+            queue.enqueue('foo1', { bar: 'baz' }, function(err, j1) {
+                if (err) return done(err);
 
-            assert.ok(spy.calledOnce);
-            var args = spy.getCall(0).args;
+                queue.enqueue('foo2', { bar: 'baz' }, function(err, j2) {
+                    if (err) return done(err);
 
-            assert.equal(args[0], 'qux');
-            spy.restore();
-            done();
+                    queue.dequeue(function(err, j) {
+                        if (err) return done(err);
+
+                        job = j;
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('finds first job for given queue', function() {
+            assert.ok(job);
+            assert.equal(job.data.name, 'foo1');
+            assert.equal(job.data.queue, 'default');
+            assert.deepEqual(job.data.params, { bar: 'baz' });
+        });
+
+        it('has a dequeued date', function() {
+            assert.ok(job.data.dequeued);
+            assert.ok(job.data.dequeued < Date.now());
+        });
+
+        it('has `dequeued` status', function() {
+            assert.equal(job.data.status, 'dequeued');
         });
     });
 });

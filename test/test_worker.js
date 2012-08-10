@@ -4,22 +4,17 @@ var Queue = require('../lib/queue');
 var Worker = require('../lib/worker');
 
 describe('Worker', function() {
-    var pubsub, queues, worker;
+    var queues, worker;
 
     beforeEach(function() {
-        pubsub = {
-            publish: function() {}
-        };
-
         queues = ['foo', 'bar', 'baz'].map(function(name) {
             return {
-                name: name,
                 enqueue: function() {},
                 dequeue: function() {}
             };
         });
 
-        worker = new Worker({ pubsub: pubsub, queues: queues });
+        worker = new Worker(queues);
     });
 
     it('has default polling interval', function() {
@@ -33,35 +28,6 @@ describe('Worker', function() {
         });
 
         worker.emit('foo', 'bar');
-    });
-
-    describe('when publishing events', function() {
-        var job;
-
-        beforeEach(function() {
-            job = { queue: 'default' };
-        });
-
-        it('emits event on object', function(done) {
-            worker.on('foo', function(j) {
-                assert.equal(j, job);
-                done();
-            });
-
-            worker.publish('foo', job);
-        });
-
-        it('publishes event to pubsub bus', function() {
-            var publish = sinon.stub(worker.pubsub, 'publish');
-
-            worker.publish('foo', job);
-
-            assert.ok(publish.calledOnce);
-            assert.deepEqual(publish.getCall(0).args[0], {
-                event: 'foo',
-                job: job
-            });
-        });
     });
 
     describe('when dequeuing', function() {
@@ -104,7 +70,7 @@ describe('Worker', function() {
             var job, work;
 
             beforeEach(function() {
-                job = { some: 'job' };
+                job = { data: {} };
                 work = sinon.stub(worker, 'work');
 
                 sinon.stub(worker.queues[0], 'dequeue').yields(null, job);
@@ -117,15 +83,13 @@ describe('Worker', function() {
                 assert.equal(work.getCall(0).args[0], job);
             });
 
-            it('publishes `dequeued` event', function() {
-                var publish = sinon.spy(worker, 'publish');
+            it('emits `dequeued` event', function(done) {
+                worker.on('dequeued', function(j) {
+                    assert.equal(j, job.data);
+                    done();
+                });
 
                 worker.start();
-
-                assert.ok(publish.calledOnce);
-                var args = publish.getCall(0).args;
-                assert.equal(args[0], 'dequeued');
-                assert.equal(args[1], job);
             });
         });
 
@@ -162,7 +126,7 @@ describe('Worker', function() {
 
             beforeEach(function() {
                 error = new Error();
-                job = { fail: function() {}};
+                job = { data: {}, fail: function() {}};
                 fail = sinon.stub(job, 'fail').yields();
                 poll = sinon.spy(worker, 'poll');
 
@@ -176,14 +140,13 @@ describe('Worker', function() {
                 assert.equal(fail.getCall(0).args[0], error)
             });
 
-            it('publishes `failed` event', function() {
-                var publish = sinon.spy(worker, 'publish');
+            it('emits `failed` event', function(done) {
+                worker.on('failed', function(data) {
+                    assert.equal(data, job.data);
+                    done();
+                });
 
                 worker.work(job);
-
-                assert.ok(publish.calledOnce);
-                assert.equal(publish.getCall(0).args[0], 'failed');
-                assert.equal(publish.getCall(0).args[1], job);
             });
 
             it('polls for a new job', function() {
@@ -211,14 +174,13 @@ describe('Worker', function() {
                 assert.equal(complete.getCall(0).args[0], 'foobar')
             });
 
-            it('publishes `complete` event', function() {
-                var publish = sinon.spy(worker, 'publish');
+            it('emits `complete` event', function(done) {
+                worker.on('complete', function(data) {
+                    assert.equal(data, job.data);
+                    done();
+                });
 
                 worker.work(job);
-
-                assert.ok(publish.calledOnce);
-                assert.equal(publish.getCall(0).args[0], 'complete');
-                assert.equal(publish.getCall(0).args[1], job);
             });
 
             it('polls for a new job', function() {

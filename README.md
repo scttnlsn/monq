@@ -10,14 +10,13 @@ Connect to MongoDB by specifying a URI or providing `host`, `port` and `database
 
 ```javascript
 var monq = require('monq');
-
-monq.connect('mongodb://localhost:27017/monq_example');
+var client = monq('mongodb://localhost:27017/monq_example');
 ```
     
 Enqueue jobs by supplying a job name and a set of parameters.  Below, the job `reverse` is being placed into the `example` queue:
 
 ```javascript
-var queue = monq.queue('example');
+var queue = client.queue('example');
 
 queue.enqueue('reverse', { text: 'foobar' }, function(err, job) {
     console.log('enqueued:', job._id);
@@ -27,7 +26,7 @@ queue.enqueue('reverse', { text: 'foobar' }, function(err, job) {
 Create workers to process the jobs from one or more queues.  The functions responsible for performing a job must be registered with each worker:
 
 ```javascript
-var worker = monq.worker({ queues: ['example'] });
+var worker = client.worker({ queues: ['example'] });
 
 worker.register({
     reverse: function(params, callback) {
@@ -58,7 +57,7 @@ Pub/sub
 Monq uses [Mubsub](http://github.com/scttnlsn/mubsub) to publish and subscribe to worker updates via MongoDB's capped collections and tailable cursors.  This allows one to monitor the state of a job as it is being handled by a worker in another process.  Subscribe to job updates by supplying a job id:
 
 ```javascript
-monq.subscribe(id, function(info) {
+client.subscribe(id, function(info) {
     console.log(info.job);
 });
 ```

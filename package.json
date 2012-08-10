@@ -12,7 +12,7 @@
     },
 
     "dependencies": {
-        "mongoose": ">= 2.7.2",
+        "mongoskin": ">= 0.3.7",
         "mubsub": ">= 0.1.3"
     },
 

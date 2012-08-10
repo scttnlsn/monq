@@ -1,127 +1,109 @@
 var assert = require('assert');
-var mongoose = require('mongoose');
-var Job = mongoose.model('Job', require('../lib/job'));
+var helpers = require('./helpers');
+var Job = require('../lib/job');
 
 describe('Job', function() {
-    before(function() {
-        mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/monq_tests');
+    var collection;
+
+    beforeEach(function() {
+        collection = helpers.db.collection('jobs');
     });
 
-    beforeEach(function(done) {
-        Job.remove(done);
+    afterEach(function(done) {
+        collection.remove({}, done);
     });
 
-    describe('when enqueueing', function() {
+    it('has data object', function() {
+        var job = new Job(collection, { foo: 'bar' });
+        assert.deepEqual(job.data, { foo: 'bar' });
+    });
+
+    describe('when saving', function() {
         var job;
 
         beforeEach(function(done) {
-            Job.enqueue('foo', { bar: 'baz' }, 'qux', function(err, instance) {
+            job = new Job(collection, { foo: 'bar' });
+            job.save(done);
+        });
+
+        it('has an `_id`', function() {
+            assert.ok(job.data._id);
+            assert.equal(job.data.foo, 'bar');
+        });
+
+        it('is inserted into collection', function(done) {
+            collection.findById(job.data._id, function(err, doc) {
                 if (err) return done(err);
 
-                job = instance;
+                assert.ok(doc);
+                assert.equal(doc._id.toString(), job.data._id.toString());
+                assert.equal(doc.foo, job.data.foo);
                 done();
             });
         });
-
-        it('has a name', function() {
-            assert.equal(job.name, 'foo');
-        });
-
-        it('has a queue', function() {
-            assert.equal(job.queue, 'qux');
-        });
-
-        it('has params', function() {
-            assert.deepEqual(job.params, { bar: 'baz' });
-        });
-
-        it('has an enqueued date', function() {
-            assert.ok(job.enqueued);
-            assert.ok(job.enqueued <= Date.now());
-        });
-
-        it('has `queued` status', function() {
-            assert.equal(job.status, 'queued');
-        });
     });
 
-    describe('when dequeueing', function() {
+    describe('when updating', function() {
         var job;
 
         beforeEach(function(done) {
-            Job.enqueue('foo1', { bar: 'baz' }, 'qux', function(err) {
+            job = new Job(collection, { foo: 'bar' });
+            job.save(function(err) {
                 if (err) return done(err);
 
-                Job.enqueue('foo2', { bar: 'baz' }, 'qux', function(err) {
-                    if (err) return done(err);
-
-                    Job.dequeue('qux', function(err, instance) {
-                        if (err) return done(err);
-
-                        job = instance;
-                        done();
-                    });
-                });
+                assert.equal(job.data.foo, 'bar');
+                
+                job.data.foo = 'baz';
+                job.save(done);
             });
         });
 
-        it('finds first job for given queue', function() {
-            assert.ok(job);
-            assert.equal(job.name, 'foo1');
-            assert.equal(job.queue, 'qux');
-        });
-
-        it('has a dequeued date', function() {
-            assert.ok(job.dequeued);
-            assert.ok(job.dequeued < Date.now());
-        });
-
-        it('has `dequeued` status', function() {
-            assert.equal(job.status, 'dequeued');
+        it('has udpated data', function() {
+            assert.equal(job.data.foo, 'baz');
         });
     });
 
-    describe('when completing job', function() {
+    describe('when completing', function() {
         var job;
 
         beforeEach(function(done) {
-            job = new Job({ name: 'foo', queue: 'qux' });
+            job = new Job(collection, { foo: 'bar' });
             job.complete({ bar: 'baz' }, done);
         });
 
+        it('has a complete status', function() {
+            assert.equal(job.data.status, 'complete');
+        });
+
+        it('has an end time', function() {
+            assert.ok(job.data.ended <= Date.now());
+        });
+
         it('has a result', function() {
-            assert.deepEqual(job.result, { bar: 'baz' });
-        });
-
-        it('has an ended time', function() {
-            assert.ok(job.ended);
-            assert.ok(job.ended <= Date.now());
-        });
-
-        it('has a `complete` status', function() {
-            assert.equal(job.status, 'complete');
+            assert.deepEqual(job.data.result, { bar: 'baz' });
         });
     });
 
-    describe('when failing job', function() {
+    describe('when failing', function() {
         var job;
 
         beforeEach(function(done) {
-            job = new Job({ name: 'foo', queue: 'qux' });
-            job.fail(new Error('bar baz'), done);
+            job = new Job(collection, { foo: 'bar' });
+            job.fail(new Error('baz'), done);
+        });
+
+        it('has a failed status', function() {
+            assert.equal(job.data.status, 'failed');
+        });
+
+        it('has an end time', function() {
+            assert.ok(job.data.ended);
+            assert.ok(job.data.ended <= Date.now());
         });
 
         it('has an error', function() {
-            assert.equal(job.error, 'bar baz');
-        });
-
-        it('has an ended time', function() {
-            assert.ok(job.ended);
-            assert.ok(job.ended <= Date.now());
-        });
-
-        it('has a `failed` status', function() {
-            assert.equal(job.status, 'failed');
+            assert.ok(job.data.error);
+            assert.equal(job.data.error, 'baz');
         });
     });
 });

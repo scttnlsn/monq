@@ -1,21 +1,23 @@
 var monq = require('../lib/index');
 
-monq.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/monq_example');
-
-var worker = monq.worker({ queues: ['foo'] });
+var client = monq(process.env.MONGODB_URI || 'mongodb://localhost:27017/monq_example');
+var worker = client.worker(['foo']);
 
 worker.register({ uppercase: require('./uppercase') });
 
 worker.on('dequeued', function(job) {
-    console.log('dequeued', job._id);
+    console.log('Dequeued:');
+    console.log(job);
 });
 
 worker.on('failed', function(job) {
-    console.log('failed', job._id);
+    console.log('Failed:');
+    console.log(job);
 });
 
 worker.on('complete', function(job) {
-    console.log('complete', job._id, job.result);
+    console.log('Complete');
+    console.log(job);
 });
 
 worker.on('error', function(err) {
