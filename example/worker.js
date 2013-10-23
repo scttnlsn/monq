@@ -1,6 +1,6 @@
 var monq = require('../lib/index');
 
-var client = monq(process.env.MONGODB_URI || 'mongodb://localhost:27017/monq_example');
+var client = monq(process.env.MONGODB_URI || 'mongodb://localhost:27017/monq_example', { safe: true });
 var worker = client.worker(['foo']);
 
 worker.register({ uppercase: require('./uppercase') });
