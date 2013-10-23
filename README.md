@@ -80,7 +80,8 @@ Install
     
 Tests
 -----
-    make test
+
+    npm test
 
 You can optionally specify the MongoDB URI to be used for tests:
 
