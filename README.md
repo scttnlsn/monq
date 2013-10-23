@@ -53,20 +53,6 @@ worker.on('failed', function(data) { … });
 worker.on('complete', function(data) { … });
 worker.on('error', function(err) { … });
 ```
-
-A job will also emit events as it is being processed by a worker.  We can subscribe to all status changes by listening for a `status` event:
-
-```javascript
-job.on('status', function(data) { ... });
-```
-
-Or for particular status changes:
-
-```javascript
-job.on('dequeued', function(data) { ... });
-job.on('failed', function(data) { ... });
-job.on('complete', function(data) { ... });
-```
     
 API
 ---
