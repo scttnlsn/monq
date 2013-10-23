@@ -2,13 +2,11 @@ var assert = require('assert');
 var helpers = require('./helpers');
 var Queue = require('../lib/queue');
 
-var pubsub = { channel: function() {} };
-
 describe('queue', function() {
     var queue;
 
     beforeEach(function() {
-        queue = new Queue({ db: helpers.db, pubsub: pubsub });
+        queue = new Queue({ db: helpers.db });
     });
 
     afterEach(function(done) {

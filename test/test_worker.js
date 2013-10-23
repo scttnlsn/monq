@@ -8,7 +8,6 @@ describe('Worker', function() {
     beforeEach(function() {
         job = {
             data: {},
-            publish: function() {},
             complete: function() {},
             fail: function() {}
         };
@@ -96,14 +95,6 @@ describe('Worker', function() {
 
                 worker.start();
             });
-
-            it('publishes job', function() {
-                var spy = sinon.spy(job, 'publish');
-
-                worker.start();
-
-                assert.ok(spy.calledOnce);
-            });
         });
 
         describe('when no job is available', function() {
@@ -162,14 +153,6 @@ describe('Worker', function() {
                 worker.work(job);
             });
 
-            it('publishes job', function() {
-                var spy = sinon.spy(job, 'publish');
-
-                worker.work(job);
-
-                assert.ok(spy.calledOnce);
-            });
-
             it('polls for a new job', function() {
                 worker.work(job);
 
@@ -201,14 +184,6 @@ describe('Worker', function() {
                 });
 
                 worker.work(job);
-            });
-
-            it('publishes job', function() {
-                var spy = sinon.spy(job, 'publish');
-
-                worker.work(job);
-
-                assert.ok(spy.calledOnce);
             });
 
             it('polls for a new job', function() {
