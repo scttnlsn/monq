@@ -2,13 +2,11 @@ var assert = require('assert');
 var helpers = require('./helpers');
 var Queue = require('../lib/queue');
 
-var pubsub = { channel: function() {} };
-
 describe('queue', function() {
     var queue;
 
     beforeEach(function() {
-        queue = new Queue({ db: helpers.db, pubsub: pubsub });
+        queue = new Queue({ db: helpers.db });
     });
 
     afterEach(function(done) {
@@ -78,7 +76,7 @@ describe('queue', function() {
 
         it('has a dequeued date', function() {
             assert.ok(job.data.dequeued);
-            assert.ok(job.data.dequeued < Date.now());
+            assert.ok(job.data.dequeued <= Date.now());
         });
 
         it('has `dequeued` status', function() {

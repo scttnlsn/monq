@@ -6,6 +6,10 @@
     "author": "Scott Nelson <scottbnel@gmail.com>",
     "main": "./lib/index",
 
+    "scripts": {
+        "test": "./node_modules/.bin/mocha"
+    },
+
     "repository": {
         "type": "git",
         "url": "git://github.com/scttnlsn/monq.git"

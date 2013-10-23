@@ -3,11 +3,10 @@ var helpers = require('./helpers');
 var Job = require('../lib/job');
 
 describe('Job', function() {
-    var adapter, collection;
+    var collection;
 
     beforeEach(function() {
         collection = helpers.db.collection('jobs');
-        adapter = { collection: collection };
     });
 
     afterEach(function(done) {
@@ -15,7 +14,7 @@ describe('Job', function() {
     });
 
     it('has data object', function() {
-        var job = new Job(adapter, { foo: 'bar' });
+        var job = new Job(collection, { foo: 'bar' });
         assert.deepEqual(job.data, { foo: 'bar' });
     });
 
@@ -23,7 +22,7 @@ describe('Job', function() {
         var job;
 
         beforeEach(function(done) {
-            job = new Job(adapter, { foo: 'bar' });
+            job = new Job(collection, { foo: 'bar' });
             job.save(done);
         });
 
@@ -48,7 +47,7 @@ describe('Job', function() {
         var job;
 
         beforeEach(function(done) {
-            job = new Job(adapter, { foo: 'bar' });
+            job = new Job(collection, { foo: 'bar' });
             job.save(function(err) {
                 if (err) return done(err);
 
@@ -68,7 +67,7 @@ describe('Job', function() {
         var job;
 
         beforeEach(function(done) {
-            job = new Job(adapter, { foo: 'bar' });
+            job = new Job(collection, { foo: 'bar' });
             job.complete({ bar: 'baz' }, done);
         });
 
@@ -89,7 +88,7 @@ describe('Job', function() {
         var job;
 
         beforeEach(function(done) {
-            job = new Job(adapter, { foo: 'bar' });
+            job = new Job(collection, { foo: 'bar' });
             job.fail(new Error('baz'), done);
         });
 
