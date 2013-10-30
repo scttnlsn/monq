@@ -76,7 +76,7 @@ describe('Job', function() {
         });
 
         it('has an end time', function() {
-            assert.ok(job.data.ended <= Date.now());
+            assert.ok(job.data.ended <= new Date());
         });
 
         it('has a result', function() {
@@ -98,7 +98,7 @@ describe('Job', function() {
 
         it('has an end time', function() {
             assert.ok(job.data.ended);
-            assert.ok(job.data.ended <= Date.now());
+            assert.ok(job.data.ended <= new Date());
         });
 
         it('has an error', function() {
