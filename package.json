@@ -16,8 +16,7 @@
     },
 
     "dependencies": {
-        "mongoskin": ">= 0.3.7",
-        "mubsub": ">= 0.2.0"
+        "mongoskin": ">= 0.3.7"
     },
 
     "devDependencies": {
