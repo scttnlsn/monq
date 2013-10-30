@@ -39,7 +39,7 @@ describe('queue', function() {
 
         it('has an enqueued date', function() {
             assert.ok(job.data.enqueued);
-            assert.ok(job.data.enqueued <= Date.now());
+            assert.ok(job.data.enqueued <= new Date());
         });
 
         it('has `queued` status', function() {
@@ -76,7 +76,7 @@ describe('queue', function() {
 
         it('has a dequeued date', function() {
             assert.ok(job.data.dequeued);
-            assert.ok(job.data.dequeued <= Date.now());
+            assert.ok(job.data.dequeued <= new Date());
         });
 
         it('has `dequeued` status', function() {
