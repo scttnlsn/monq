@@ -41,6 +41,15 @@ describe('Job', function() {
                 done();
             });
         });
+
+        it('contains a string id', function(done) {
+            collection.findById(job.data._id, function(err, doc) {
+                if (err) return done(err);
+
+                assert.equal(doc._id.toHexString(), job.data.id);
+                done();
+            });
+        });
     });
 
     describe('when updating', function() {
