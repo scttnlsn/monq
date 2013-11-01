@@ -122,6 +122,118 @@ describe('Worker', function() {
                 assert.ok(poll.calledOnce);
             });
         });
+
+        describe('when stopping with a job in progress', function() {
+            var dequeueStubs;
+
+            beforeEach(function(){
+                dequeueStubs = worker.queues.map(function(queue){
+                    return sinon.stub(queue, 'dequeue').yieldsAsync(null, job);
+                });
+
+                sinon.stub(worker, 'process').yields(null, 'foobar');
+                sinon.stub(job, 'complete').yields();
+
+                worker.start();
+                worker.work(job);
+            });
+
+            it('waits for the job to finish', function(done){
+                assert.ok(worker.working);
+
+                worker.stop(function(){
+                    assert.ok(!worker.working);
+
+                    assert.ok(dequeueStubs[0].calledOnce);
+                    assert.ok(dequeueStubs[1].calledOnce); //It doesn't get the stop signal until after the next dequeue is in motion
+                    assert.ok(!dequeueStubs[2].called); //Make sure it didn't continue polling after we told it to stop
+
+                    assert.equal(worker.listeners('done').length, 0);
+                    assert.equal(worker.listeners('poll-not-working').length, 0);
+
+                    done();
+                });
+            });
+        });
+
+        describe('when stopping during an empty dequeue', function() {
+            var dequeueStubs;
+
+            beforeEach(function(){
+                dequeueStubs = worker.queues.map(function(queue){
+                    return sinon.stub(queue, 'dequeue').yieldsAsync(null, null);
+                });
+
+                worker.start();
+            });
+
+            it('stops cleanly', function(done){
+                assert.ok(worker.working);
+
+                worker.stop(function(){
+                    assert.ok(!worker.working);
+
+                    assert.ok(dequeueStubs[0].called);
+                    assert.ok(!dequeueStubs[1].called); //Make sure it didn't continue polling after we told it to stop
+                    assert.ok(!dequeueStubs[2].called);
+
+                    assert.equal(worker.listeners('done').length, 0);
+                    assert.equal(worker.listeners('poll-not-working').length, 0);
+
+                    done();
+                });
+            });
+        });
+
+        describe('when stopping between polls', function() {
+            var dequeueStubs;
+
+            beforeEach(function(){
+                dequeueStubs = worker.queues.map(function(queue){
+                    return sinon.stub(queue, 'dequeue').yieldsAsync(null, null);
+                });
+
+                worker.start();
+            });
+
+            it('stops cleanly', function(done){
+                assert.ok(worker.working);
+
+                worker.once('empty-dequeue', function(){
+                    worker.stop(function(){
+                        assert.ok(!worker.working);
+
+                        assert.ok(dequeueStubs[0].called);
+                        assert.ok(!dequeueStubs[1].called); //Make sure it didn't continue polling after we told it to stop
+                        assert.ok(!dequeueStubs[2].called);
+
+                        assert.equal(worker.listeners('done').length, 0);
+                        assert.equal(worker.listeners('poll-not-working').length, 0);
+
+                        done();
+                    });
+                });
+            });
+        });
+
+        describe('when stopping twice', function() {
+            var dequeueStubs;
+
+            beforeEach(function(){
+                dequeueStubs = worker.queues.map(function(queue){
+                    return sinon.stub(queue, 'dequeue').yieldsAsync(null, null);
+                });
+
+                worker.start();
+            });
+
+            it('does not error', function(done){
+                worker.stop(function(){
+                    worker.stop();
+                    done();
+                })
+            });
+        });
     });
 
     describe('when working', function() {
@@ -142,6 +254,15 @@ describe('Worker', function() {
 
                 assert.ok(fail.calledOnce);
                 assert.equal(fail.getCall(0).args[0], error)
+            });
+
+            it('emits `done` event', function(done) {
+                worker.on('done', function(data) {
+                    assert.equal(data, job.data);
+                    done();
+                });
+
+                worker.work(job);
             });
 
             it('emits `failed` event', function(done) {
@@ -175,6 +296,15 @@ describe('Worker', function() {
 
                 assert.ok(complete.calledOnce);
                 assert.equal(complete.getCall(0).args[0], 'foobar')
+            });
+
+            it('emits `done` event', function(done) {
+                worker.on('done', function(data) {
+                    assert.equal(data, job.data);
+                    done();
+                });
+
+                worker.work(job);
             });
 
             it('emits `complete` event', function(done) {
