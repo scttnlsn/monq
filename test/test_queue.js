@@ -45,6 +45,28 @@ describe('queue', function() {
         it('has `queued` status', function() {
             assert.equal(job.data.status, 'queued');
         });
+
+        it('can be gotten', function(done){
+            queue.fetchJob(job.data._id, function(err, fetchedJob){
+                if(err) return done(err);
+
+                assert.ok(fetchedJob);
+                assert.equal(fetchedJob.data._id.toString(), job.data._id.toString());
+                assert.equal(fetchedJob.data.foo, job.data.foo);
+                done();
+            });
+        });
+
+        it('can be gotten by string id', function(done){
+            queue.fetchJob(job.data._id.toString(), function(err, fetchedJob){
+                if(err) return done(err);
+
+                assert.ok(fetchedJob);
+                assert.equal(fetchedJob.data._id.toString(), job.data._id.toString());
+                assert.equal(fetchedJob.data.foo, job.data.foo);
+                done();
+            });
+        });
     });
 
     describe('when dequeueing', function() {
