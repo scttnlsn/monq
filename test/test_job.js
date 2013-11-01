@@ -46,7 +46,7 @@ describe('Job', function() {
             collection.findById(job.data._id, function(err, doc) {
                 if (err) return done(err);
 
-                assert.equal(doc._id.toHexString(), job.data.id);
+                assert.equal(doc._id.toString(), job.data.id);
                 done();
             });
         });
