@@ -105,5 +105,9 @@ describe('Job', function() {
             assert.ok(job.data.error);
             assert.equal(job.data.error, 'baz');
         });
+
+        it('has a stack', function(){
+            assert.ok(job.data.stack);
+        });
     });
 });
