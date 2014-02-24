@@ -15,13 +15,17 @@ describe('queue', function() {
 
     describe('when enqueueing', function() {
         var job;
+        var job2;
 
         beforeEach(function(done) {
             queue.enqueue('foo', { bar: 'baz' }, function(err, j) {
-                if (err) return done(err);
-
                 job = j;
-                done();
+                if (err) return done(err);
+                queue.enqueue('foo2', { bar: 'baz' }, { delay: new Date(0) }, function(err, j2) {
+                    if (err) return done(err);
+                    job2 = j2;
+                    done();
+                });
             });
         });
 
@@ -40,6 +44,12 @@ describe('queue', function() {
         it('has an enqueued date', function() {
             assert.ok(job.data.enqueued);
             assert.ok(job.data.enqueued <= new Date());
+        });
+
+        it('has an delay date', function() {
+            assert.ok(job.data.delay);
+            assert.ok(job.data.delay <= new Date());
+            assert.ok(job2.data.delay.getTime() == (new Date(0)).getTime());
         });
 
         it('has `queued` status', function() {
@@ -71,12 +81,14 @@ describe('queue', function() {
 
     describe('when dequeueing', function() {
         var job;
+        var job2;
 
         beforeEach(function(done) {
             queue.enqueue('foo1', { bar: 'baz' }, function(err, j1) {
                 if (err) return done(err);
-
-                queue.enqueue('foo2', { bar: 'baz' }, function(err, j2) {
+                var d = new Date();
+                d.setFullYear(d.getFullYear() + 10);
+                queue.enqueue('foo2', { bar: 'baz' }, { delay: d }, function(err, j2) {
                     if (err) return done(err);
 
                     queue.dequeue(function(err, j) {
@@ -103,6 +115,13 @@ describe('queue', function() {
 
         it('has `dequeued` status', function() {
             assert.equal(job.data.status, 'dequeued');
+        });
+
+        it('does not dequeud delayed job', function() {
+            queue.dequeue(function(err, j) {
+                assert.equal(err, undefined);
+                assert.equal(j, undefined);
+            });
         });
     });
 });
