@@ -5,7 +5,7 @@ var sinon = require('sinon');
 var Worker = require('../lib/worker');
 
 describe('job', function() {
-    var queue, handler, worker;
+    var queue, handler, worker, failHandler;
 
     before(function(done) {
         queue = new Queue({ db: helpers.db });
@@ -16,9 +16,13 @@ describe('job', function() {
             }
         );
 
+        failHandler = sinon.spy();
+
         worker = new Worker([ queue ], { interval: 10 });
         worker.register({ retry: handler });
         worker.start();
+
+        worker.on('failed', failHandler);
 
         queue.collection.remove({}, done);
     });
@@ -36,7 +40,7 @@ describe('job', function() {
             queue.enqueue('retry', { test: 'data' }, { retries: 2 }, done);
         });
 
-        it('is tried 3 times', function(done){
+        it('calls the handler 3 times', function(done){
             (function hasFinished(){
                 if(handler.calledThrice){
                     done();
@@ -45,11 +49,21 @@ describe('job', function() {
                 }
             })();
         });
+
+        it('emits failed 3 times', function(){
+            assert.ok(failHandler.calledThrice);
+        });
+
+        it('updates the job status', function(){
+            var job = failHandler.lastCall.args[0];
+            assert.ok(job.retries === 0);
+            assert.ok(job.status === 'failed');
+        });
     });
 });
 
 describe('job', function() {
-    var queue, handler, startTime, worker;
+    var queue, handler, startTime, worker, failHandler;
 
     before(function(done) {
         queue = new Queue({ db: helpers.db });
@@ -60,9 +74,13 @@ describe('job', function() {
             }
         );
 
+        failHandler = sinon.spy();
+
         worker = new Worker([ queue ], { interval: 10 });
         worker.register({ retry: handler });
         worker.start();
+
+        worker.on('failed', failHandler);
 
         queue.collection.remove({}, done);
     });
@@ -81,7 +99,7 @@ describe('job', function() {
             queue.enqueue('retry', { test: 'data' }, { retries: 2, retryDelayMS: 50 }, done);
         });
 
-        it('is tried 3 times', function(done){
+        it('calls the handler 3 times', function(done){
             (function hasFinished(){
                 if(handler.calledThrice){
                     done();
@@ -94,11 +112,21 @@ describe('job', function() {
         it('takes longer than 100ms', function(){
             assert.ok(new Date().getTime() - startTime.getTime() > 100);
         });
+
+        it('emits failed 3 times', function(){
+            assert.ok(failHandler.calledThrice);
+        });
+
+        it('updates the job status', function(){
+            var job = failHandler.lastCall.args[0];
+            assert.ok(job.retries === 0);
+            assert.ok(job.status === 'failed');
+        });
     });
 });
 
 describe('job', function() {
-    var queue, handler, startTime, worker;
+    var queue, handler, startTime, worker, failHandler;
 
     before(function(done) {
         queue = new Queue({ db: helpers.db });
@@ -109,9 +137,13 @@ describe('job', function() {
             }
         );
 
+        failHandler = sinon.spy();
+
         worker = new Worker([ queue ], { interval: 10 });
         worker.register({ retry: handler });
         worker.start();
+
+        worker.on('failed', failHandler);
 
         queue.collection.remove({}, done);
     });
@@ -146,7 +178,7 @@ describe('job', function() {
             );
         });
 
-        it('is tried 3 times', function(done){
+        it('calls the handler 3 times', function(done){
             (function hasFinished(){
                 if(handler.calledThrice){
                     done();
@@ -159,11 +191,21 @@ describe('job', function() {
         it('takes longer than 100ms', function(){
             assert.ok(new Date().getTime() - startTime.getTime() > 100);
         });
+
+        it('emits failed 3 times', function(){
+            assert.ok(failHandler.calledThrice);
+        });
+
+        it('updates the job status', function(){
+            var job = failHandler.lastCall.args[0];
+            assert.ok(job.retries === 0);
+            assert.ok(job.status === 'failed');
+        });
     });
 });
 
 describe('job', function() {
-    var queue, handler, worker;
+    var queue, handler, worker, failHandler;
 
     before(function(done) {
         queue = new Queue({ db: helpers.db });
@@ -174,9 +216,13 @@ describe('job', function() {
             }
         );
 
+        failHandler = sinon.spy();
+
         worker = new Worker([ queue ], { interval: 10 });
         worker.register({ retry: handler });
         worker.start();
+
+        worker.on('failed', failHandler);
 
         queue.collection.remove({}, done);
     });
@@ -194,11 +240,21 @@ describe('job', function() {
             queue.enqueue('retry', { test: 'data' }, done);
         });
 
-        it('is tried only once', function(done){
+        it('calls the handler only once', function(done){
             setTimeout(function(){
                 assert.ok(handler.calledOnce);
                 done();
             }, 50); //Give it time to poll a few times, if it was going to
+        });
+
+        it('emits failed once', function(){
+            assert.ok(failHandler.calledOnce);
+        });
+
+        it('updates the job status', function(){
+            var job = failHandler.lastCall.args[0];
+            assert.ok(job.retries === undefined);
+            assert.ok(job.status === 'failed');
         });
     });
 });
