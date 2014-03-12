@@ -37,7 +37,7 @@ describe('job', function() {
 
     describe('with retries', function(){
         it('enqueues', function(done){
-            queue.enqueue('retry', { test: 'data' }, { retries: 2 }, done);
+            queue.enqueue('retry', { test: 'data' }, { attempts: { count: 3 } }, done);
         });
 
         it('calls the handler 3 times', function(done){
@@ -56,8 +56,10 @@ describe('job', function() {
 
         it('updates the job status', function(){
             var job = failHandler.lastCall.args[0];
-            assert.ok(job.retries === 0);
-            assert.ok(job.status === 'failed');
+
+            assert.equal(job.attempts.attemptsLeft, 0);
+            assert.equal(job.attempts.count, 3);
+            assert.equal(job.status, 'failed');
         });
     });
 });
@@ -96,7 +98,7 @@ describe('job', function() {
     describe('with retries and retry delay', function(){
         it('enqueues', function(done){
             startTime = new Date();
-            queue.enqueue('retry', { test: 'data' }, { retries: 2, retryDelayMS: 50 }, done);
+            queue.enqueue('retry', { test: 'data' }, { attempts: { count: 3, delayMS: 50 } }, done);
         });
 
         it('calls the handler 3 times', function(done){
@@ -119,8 +121,9 @@ describe('job', function() {
 
         it('updates the job status', function(){
             var job = failHandler.lastCall.args[0];
-            assert.ok(job.retries === 0);
-            assert.ok(job.status === 'failed');
+            assert.equal(job.attempts.attemptsLeft, 0);
+            assert.equal(job.attempts.count, 3);
+            assert.equal(job.status, 'failed');
         });
     });
 });
@@ -168,9 +171,11 @@ describe('job', function() {
                 },
 
                 {
-                    retries: 2,
-                    retryDelayMS: function(job){
-                        return job.params.wait;
+                    attempts: {
+                        count: 3,
+                        delayFunction: function(job){
+                            return job.params.wait;
+                        }
                     }
                 },
 
@@ -198,8 +203,87 @@ describe('job', function() {
 
         it('updates the job status', function(){
             var job = failHandler.lastCall.args[0];
-            assert.ok(job.retries === 0);
-            assert.ok(job.status === 'failed');
+            assert.equal(job.attempts.attemptsLeft, 0);
+            assert.equal(job.attempts.count, 3);
+            assert.equal(job.status, 'failed');
+        });
+    });
+});
+
+describe('job', function() {
+    var queue, handler, startTime, worker, failHandler;
+
+    before(function(done) {
+        queue = new Queue({ db: helpers.db });
+
+        handler = sinon.spy(
+            function(params, callback){
+                return callback(new Error());
+            }
+        );
+
+        failHandler = sinon.spy();
+
+        worker = new Worker([ queue ], { interval: 10 });
+        worker.register({ retry: handler });
+        worker.start();
+
+        worker.on('failed', failHandler);
+
+        queue.collection.remove({}, done);
+    });
+
+    after(function(done){
+        worker.stop(done);
+    });
+
+    after(function(done) {
+        queue.collection.remove({}, done);
+    });
+
+    describe('with retries and exponential strategy', function(){
+        it('enqueues', function(done){
+            startTime = new Date();
+            queue.enqueue(
+                'retry',
+
+                { test: 'exponential' },
+
+                {
+                    attempts: {
+                        count: 5,
+                        delayStrategy: 'exponential',
+                        delayMS: 10
+                    }
+                },
+
+                done
+            );
+        });
+
+        it('calls the handler 3 times', function(done){
+            (function hasFinished(){
+                if(handler.callCount === 5){
+                    done();
+                } else {
+                    setTimeout(hasFinished, 10);
+                }
+            })();
+        });
+
+        it('takes longer than 100ms', function(){
+            assert.ok(new Date().getTime() - startTime.getTime() > 100);
+        });
+
+        it('emits failed 5 times', function(){
+            assert.equal(failHandler.callCount, 5);
+        });
+
+        it('updates the job status', function(){
+            var job = failHandler.lastCall.args[0];
+            assert.equal(job.attempts.attemptsLeft, 0);
+            assert.equal(job.attempts.count, 5);
+            assert.equal(job.status, 'failed');
         });
     });
 });
@@ -253,8 +337,8 @@ describe('job', function() {
 
         it('updates the job status', function(){
             var job = failHandler.lastCall.args[0];
-            assert.ok(job.retries === undefined);
-            assert.ok(job.status === 'failed');
+            assert.equal(job.attempts, undefined);
+            assert.equal(job.status, 'failed');
         });
     });
 });
