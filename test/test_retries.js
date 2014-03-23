@@ -141,5 +141,11 @@ describe('Retries', function () {
         it('emits failed once', function () {
             assert.equal(failed.callCount, 1);
         });
+
+        it('updates the job status', function () {
+            var data = failed.lastCall.args[0];
+
+            assert.equal(data.status, 'failed');
+        });
     });
 });

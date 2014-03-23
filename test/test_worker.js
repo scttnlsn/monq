@@ -143,7 +143,6 @@ describe('Worker', function () {
 
                 worker.stop(function () {
                     assert.ok(!worker.working);
-
                     assert.ok(dequeueStubs[0].calledOnce);
 
                     // It doesn't get the stop signal until after the next dequeue is in motion
@@ -153,8 +152,6 @@ describe('Worker', function () {
                     assert.ok(!dequeueStubs[2].called);
 
                     assert.equal(worker.listeners('done').length, 0);
-                    assert.equal(worker.listeners('poll-not-working').length, 0);
-
                     done();
                 });
             });
@@ -176,17 +173,13 @@ describe('Worker', function () {
 
                 worker.stop(function () {
                     assert.ok(!worker.working);
-
                     assert.ok(dequeueStubs[0].called);
 
                     // Make sure it didn't continue polling after we told it to stop
                     assert.ok(!dequeueStubs[1].called);
 
                     assert.ok(!dequeueStubs[2].called);
-
                     assert.equal(worker.listeners('done').length, 0);
-                    assert.equal(worker.listeners('poll-not-working').length, 0);
-
                     done();
                 });
             });
@@ -209,17 +202,13 @@ describe('Worker', function () {
                 worker.once('empty', function () {
                     worker.stop(function () {
                         assert.ok(!worker.working);
-
                         assert.ok(dequeueStubs[0].called);
 
                         // Make sure it didn't continue polling after we told it to stop
                         assert.ok(!dequeueStubs[1].called);
 
                         assert.ok(!dequeueStubs[2].called);
-
                         assert.equal(worker.listeners('done').length, 0);
-                        assert.equal(worker.listeners('poll-not-working').length, 0);
-
                         done();
                     });
                 });

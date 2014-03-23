@@ -2,7 +2,7 @@ var assert = require('assert');
 var helpers = require('./helpers');
 var Queue = require('../lib/queue');
 
-describe('queue', function () {
+describe('Queue', function () {
     var queue;
 
     beforeEach(function () {
@@ -13,7 +13,7 @@ describe('queue', function () {
         queue.collection.remove({}, done);
     });
 
-    describe('when enqueueing', function () {
+    describe('enqueue', function () {
         var job;
 
         beforeEach(function (done) {
@@ -62,7 +62,7 @@ describe('queue', function () {
         });
     });
 
-    describe('when dequeueing', function () {
+    describe('dequeue', function () {
         var job;
 
         beforeEach(function (done) {
