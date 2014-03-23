@@ -1,260 +1,123 @@
 var assert = require('assert');
+var sinon = require('sinon');
 var helpers = require('./helpers');
 var Queue = require('../lib/queue');
-var sinon = require('sinon');
 var Worker = require('../lib/worker');
 
-describe('job', function() {
-    var queue, handler, worker, failHandler;
+describe('Retries', function () {
+    var queue, handler, worker, failed;
 
-    before(function(done) {
+    beforeEach(function () {
         queue = new Queue({ db: helpers.db });
 
-        handler = sinon.spy(
-            function(params, callback) {
-                return callback(new Error());
-            }
-        );
+        handler = sinon.spy(function (params, callback) {
+            return callback(new Error());
+        });
 
-        failHandler = sinon.spy();
+        failed = sinon.spy();
 
-        worker = new Worker([ queue ], { interval: 10 });
+        worker = new Worker([queue], { interval: 1 });
         worker.register({ retry: handler });
-        worker.start();
+        worker.on('failed', failed);
+    });
 
-        worker.on('failed', failHandler);
-
+    afterEach(function (done) {
         queue.collection.remove({}, done);
     });
 
-    after(function(done) {
-        worker.stop(done);
-    });
-
-    after(function(done) {
-        queue.collection.remove({}, done);
-    });
-
-    describe('with retries', function() {
-        it('enqueues', function(done) {
-            queue.enqueue('retry', { test: 'data' }, { attempts: { count: 3 } }, done);
+    describe('worker retrying job', function () {
+        beforeEach(function (done) {
+            queue.enqueue('retry', {}, { attempts: { count: 3 } }, done);
         });
 
-        it('calls the handler 3 times', function(done) {
-            (function finished() {
-                if (handler.calledThrice) {
-                    done();
-                } else {
-                    setTimeout(finished, 10);
-                }
-            })();
+        beforeEach(function (done) {
+            helpers.flushWorker(worker, done);
         });
 
-        it('emits failed 3 times', function() {
-            assert.ok(failHandler.calledThrice);
+        it('calls the handler once for each retry', function () {
+            assert.equal(handler.callCount, 3);
         });
 
-        it('updates the job status', function() {
-            var job = failHandler.lastCall.args[0];
+        it('emits failed once for each failed attempt', function () {
+            assert.equal(failed.callCount, 3);
+        });
+
+        it('updates the job status', function () {
+            var job = failed.lastCall.args[0];
 
             assert.equal(job.attempts.remaining, 0);
             assert.equal(job.attempts.count, 3);
             assert.equal(job.status, 'failed');
         });
     });
-});
 
-describe('job', function() {
-    var queue, handler, startTime, worker, failHandler;
-
-    before(function(done) {
-        queue = new Queue({ db: helpers.db });
-
-        handler = sinon.spy(
-            function(params, callback) {
-                return callback(new Error());
-            }
-        );
-
-        failHandler = sinon.spy();
-
-        worker = new Worker([ queue ], { interval: 10 });
-        worker.register({ retry: handler });
-        worker.start();
-
-        worker.on('failed', failHandler);
-
-        queue.collection.remove({}, done);
-    });
-
-    after(function(done) {
-        worker.stop(done);
-    });
-
-    after(function(done) {
-        queue.collection.remove({}, done);
-    });
-
-    describe('with retries and retry delay', function() {
-        it('enqueues', function(done) {
-            startTime = new Date();
-            queue.enqueue('retry', { test: 'data' }, { attempts: { count: 3, delay: 50 } }, done);
+    describe('worker retrying job with delay', function () {
+        beforeEach(function (done) {
+            queue.enqueue('retry', {}, { attempts: { count: 3, delay: 10 } }, done);
         });
 
-        it('calls the handler 3 times', function(done) {
-            (function finished() {
-                if (handler.calledThrice) {
-                    done();
-                } else {
-                    setTimeout(finished, 10);
-                }
-            })();
+        describe('after first attempt', function () {
+            beforeEach(function (done) {
+                helpers.flushWorker(worker, done);
+            });
+
+            it('calls handler once', function () {
+                assert.equal(handler.callCount, 1);
+            });
+
+            it('emits `failed` once', function () {
+                assert.equal(failed.callCount, 1);
+            });
+
+            it('re-enqueues job', function () {
+                var data = failed.lastCall.args[0];
+                assert.equal(data.status, 'queued');
+            });
         });
 
-        it('takes longer than 100ms', function() {
-            assert.ok(new Date().getTime() - startTime.getTime() > 100);
-        });
+        describe('after all attempts', function () {
+            beforeEach(function (done) {
+                worker.start();
 
-        it('emits failed 3 times', function() {
-            assert.ok(failHandler.calledThrice);
-        });
+                // wait for all attempts
+                setTimeout(function () {
+                    worker.stop(done);
+                }, 50);
+            });
 
-        it('updates the job status', function() {
-            var job = failHandler.lastCall.args[0];
-            assert.equal(job.attempts.remaining, 0);
-            assert.equal(job.attempts.count, 3);
-            assert.equal(job.status, 'failed');
+            it('calls the handler once for each retry', function () {
+                assert.equal(handler.callCount, 3);
+            });
+
+            it('emits failed once for each failed attempt', function () {
+                assert.equal(failed.callCount, 3);
+            });
+
+            it('updates the job status', function () {
+                var data = failed.lastCall.args[0];
+
+                assert.equal(data.attempts.remaining, 0);
+                assert.equal(data.attempts.count, 3);
+                assert.equal(data.status, 'failed');
+            });
         });
     });
-});
 
-describe('job', function() {
-    var queue, handler, startTime, worker, failHandler;
-
-    before(function(done) {
-        queue = new Queue({ db: helpers.db });
-
-        handler = sinon.spy(
-            function(params, callback) {
-                return callback(new Error());
-            }
-        );
-
-        failHandler = sinon.spy();
-
-        worker = new Worker([ queue ], { interval: 10 });
-        worker.register({ retry: handler });
-        worker.start();
-
-        worker.on('failed', failHandler);
-
-        queue.collection.remove({}, done);
-    });
-
-    after(function(done) {
-        worker.stop(done);
-    });
-
-    after(function(done) {
-        queue.collection.remove({}, done);
-    });
-
-    describe('with retries and exponential strategy', function() {
-        it('enqueues', function(done) {
-            startTime = new Date();
-
-            queue.enqueue(
-                'retry',
-                { test: 'exponential' },
-                {
-                    attempts: {
-                        count: 5,
-                        strategy: 'exponential',
-                        delay: 10
-                    }
-                },
-                done
-            );
+    describe('worker retrying job with no retries', function () {
+        beforeEach(function (done) {
+            queue.enqueue('retry', {}, { attempts: { count: 0 }}, done);
         });
 
-        it('calls the handler 3 times', function(done) {
-            (function finished() {
-                if (handler.callCount === 5) {
-                    done();
-                } else {
-                    setTimeout(finished, 10);
-                }
-            })();
+        beforeEach(function (done) {
+            helpers.flushWorker(worker, done);
         });
 
-        it('takes longer than 100ms', function() {
-            assert.ok(new Date().getTime() - startTime.getTime() > 100);
+        it('calls the handler once', function () {
+            assert.equal(handler.callCount, 1);
         });
 
-        it('emits failed 5 times', function() {
-            assert.equal(failHandler.callCount, 5);
-        });
-
-        it('updates the job status', function() {
-            var job = failHandler.lastCall.args[0];
-            assert.equal(job.attempts.remaining, 0);
-            assert.equal(job.attempts.count, 5);
-            assert.equal(job.status, 'failed');
-        });
-    });
-});
-
-describe('job', function() {
-    var queue, handler, worker, failHandler;
-
-    before(function(done) {
-        queue = new Queue({ db: helpers.db });
-
-        handler = sinon.spy(
-            function(params, callback) {
-                return callback(new Error());
-            }
-        );
-
-        failHandler = sinon.spy();
-
-        worker = new Worker([ queue ], { interval: 10 });
-        worker.register({ retry: handler });
-        worker.start();
-
-        worker.on('failed', failHandler);
-
-        queue.collection.remove({}, done);
-    });
-
-    after(function(done) {
-        worker.stop(done);
-    });
-
-    after(function(done) {
-        queue.collection.remove({}, done);
-    });
-
-    describe('without retries', function() {
-        it('enqueues', function(done) {
-            queue.enqueue('retry', { test: 'data' }, done);
-        });
-
-        it('calls the handler only once', function(done) {
-            setTimeout(function() {
-                assert.ok(handler.calledOnce);
-                done();
-            }, 50); //Give it time to poll a few times, if it was going to
-        });
-
-        it('emits failed once', function() {
-            assert.ok(failHandler.calledOnce);
-        });
-
-        it('updates the job status', function() {
-            var job = failHandler.lastCall.args[0];
-            assert.equal(job.attempts, undefined);
-            assert.equal(job.status, 'failed');
+        it('emits failed once', function () {
+            assert.equal(failed.callCount, 1);
         });
     });
 });

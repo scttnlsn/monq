@@ -1,159 +1,79 @@
 var assert = require('assert');
+var async = require('async');
+var sinon = require('sinon');
 var helpers = require('./helpers');
 var Queue = require('../lib/queue');
-var sinon = require('sinon');
 var Worker = require('../lib/worker');
+var jobs = require('./fixtures/priority_jobs');
 
-describe('job', function() {
-    var queue, handler, worker;
+describe('Priority', function () {
+    var handler, queue, worker;
 
-    before(function(done) {
+    beforeEach(function () {
         queue = new Queue({ db: helpers.db });
 
-        handler = sinon.spy(
-            function(params, callback) {
-                callback();
-            }
-        );
+        handler = sinon.spy(function (params, callback) {
+            callback();
+        });
+    });
 
-        worker = new Worker([ queue ], { interval: 10 });
-        worker.register({ priority: handler });
-
+    afterEach(function (done) {
         queue.collection.remove({}, done);
     });
 
-    after(function(done) {
-        worker.stop(done);
-    });
-
-    after(function(done) {
-        queue.collection.remove({}, done);
-    });
-
-    describe('with priority', function() {
-        it('enqueues a negative 2 priority job', function(done) {
-            queue.enqueue('priority', { data: 'negative-priority-2' }, { priority: -2 }, done);
-        });
-
-        it('enqueues a negative 1 priority job', function(done) {
-            queue.enqueue('priority', { data: 'negative-priority-1-1' }, { priority: -1 }, done);
-        });
-
-        it('enqueues a negative 1 priority job', function(done) {
-            queue.enqueue('priority', { data: 'negative-priority-1-2' }, { priority: -1 }, done);
-        });
-
-        it('enqueues a default priority job', function(done) {
-            queue.enqueue('priority', { data: 'priority-default-1' }, done);
-        });
-
-        it('enqueues a default priority job', function(done) {
-            queue.enqueue('priority', { data: 'priority-default-2' }, done);
-        });
-
-        it('enqueues a priority 0 job', function(done) {
-            queue.enqueue('priority', { data: 'priority-0-1' }, { priority: 0 }, done);
-        });
-
-        it('enqueues a priority 0 job', function(done) {
-            queue.enqueue('priority', { data: 'priority-0-2' }, { priority: 0 }, done);
-        });
-
-        it('enqueues a priority 1 job', function(done) {
-            queue.enqueue('priority', { data: 'priority-1' }, { priority: 1 }, done);
-        });
-
-        it('starts working', function() {
+    describe('worker with no minimum priority', function () {
+        beforeEach(function (done) {
+            worker = new Worker([queue], { interval: 1 });
+            worker.register({ priority: handler });
             worker.start();
+
+            helpers.each(jobs, queue.enqueue.bind(queue), done);
         });
 
-        it('calls the handler 5 times', function(done) {
-            (function hasFinished() {
-                if (handler.callCount === 8) {
-                    done();
-                } else {
-                    setTimeout(hasFinished, 10);
-                }
-            })();
+        beforeEach(function (done) {
+            worker.on('empty', function () {
+                worker.stop(done);
+            });
         });
 
-        it('processes the jobs in the correct order', function() {
-            assert.equal(handler.args[0][0].data, 'priority-1');
-            assert.equal(handler.args[1][0].data, 'priority-default-1');
-            assert.equal(handler.args[2][0].data, 'priority-default-2');
-            assert.equal(handler.args[3][0].data, 'priority-0-1');
-            assert.equal(handler.args[4][0].data, 'priority-0-2');
-            assert.equal(handler.args[5][0].data, 'negative-priority-1-1');
-            assert.equal(handler.args[6][0].data, 'negative-priority-1-2');
-            assert.equal(handler.args[7][0].data, 'negative-priority-2');
+        it('calls handler once for each job', function () {
+            assert.equal(handler.callCount, 9);
+        });
+
+        it('processes jobs with higher priority first', function () {
+            var labels = handler.args.map(function (args) {
+                return args[0].label;
+            });
+
+            assert.deepEqual(labels, ['i', 'h', 'd', 'e', 'f', 'g', 'b', 'c', 'a']);
         });
     });
-});
 
-describe('worker', function() {
-    var queue, handler, worker;
-
-    before(function(done) {
-        queue = new Queue({ db: helpers.db });
-
-        handler = sinon.spy(
-            function(params, callback) {
-                callback();
-            }
-        );
-
-        worker = new Worker([ queue ], { interval: 10, minPriority: 1 });
-        worker.register({ priority: handler });
-
-        queue.collection.remove({}, done);
-    });
-
-    after(function(done) {
-        worker.stop(done);
-    });
-
-    after(function(done) {
-        queue.collection.remove({}, done);
-    });
-
-    describe('with minimum priority', function() {
-        it('enqueues a negative 1 priority job', function(done) {
-            queue.enqueue('priority', { data: 'negative-priority' }, { priority: -1 }, done);
-        });
-
-        it('enqueues a default priority job', function(done) {
-            queue.enqueue('priority', { data: 'priority-default' }, done);
-        });
-
-        it('enqueues a priority 0 job', function(done) {
-            queue.enqueue('priority', { data: 'priority-0' }, { priority: 0 }, done);
-        });
-
-        it('enqueues a priority 1 job', function(done) {
-            queue.enqueue('priority', { data: 'priority-1' }, { priority: 1 }, done);
-        });
-
-        it('enqueues a priority 2 job', function(done) {
-            queue.enqueue('priority', { data: 'priority-2' }, { priority: 2 }, done);
-        });
-
-        it('starts working', function() {
+    describe('worker with minimum priority', function () {
+        beforeEach(function (done) {
+            worker = new Worker([queue], { interval: 1, minPriority: 1 });
+            worker.register({ priority: handler });
             worker.start();
+
+            helpers.each(jobs, queue.enqueue.bind(queue), done);
         });
 
-        it('calls the handler 2 times', function(done) {
-            (function hasFinished() {
-                if (handler.calledTwice) {
-                    done();
-                } else {
-                    setTimeout(hasFinished, 10);
-                }
-            })();
+        beforeEach(function (done) {
+            worker.on('empty', function () {
+                worker.stop(done);
+            });
         });
 
-        it('processes the jobs in the correct order', function() {
-            assert.equal(handler.args[0][0].data, 'priority-2');
-            assert.equal(handler.args[1][0].data, 'priority-1');
+        it('calls handler once for each job with sufficient priority', function () {
+            assert.equal(handler.callCount, 2);
+        });
+
+        it('processes jobs with higher priority first', function () {
+            var labels = handler.args.map(function (args) {
+                return args[0].label;
+            });
+
+            assert.deepEqual(labels, ['i', 'h']);
         });
     });
 });

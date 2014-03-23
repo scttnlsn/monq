@@ -4,115 +4,67 @@ var Queue = require('../lib/queue');
 var sinon = require('sinon');
 var Worker = require('../lib/worker');
 
-describe('job', function() {
-    var queue, handler, worker, failHandler;
+describe('Timeout', function () {
+    var queue, handler, worker, failed;
 
-    before(function(done) {
+    beforeEach(function () {
         queue = new Queue({ db: helpers.db });
 
-        handler = sinon.spy(function(params, callback) {
-            // Don't call the callback, let it time out
+        handler = sinon.spy(function (params, callback) {
+            // Don't call the callback, let it timeout
         });
 
-        failHandler = sinon.spy();
+        failed = sinon.spy();
 
-        worker = new Worker([ queue ], { interval: 10 });
-        worker.register({ timeoutTest: handler });
-        worker.start();
+        worker = new Worker([queue], { interval: 10 });
+        worker.register({ timeout: handler });
+        worker.on('failed', failed);
+    });
 
-        worker.on('failed', failHandler);
-
+    afterEach(function (done) {
         queue.collection.remove({}, done);
     });
 
-    after(function(done) {
-        worker.stop(done);
-    });
-
-    after(function(done) {
-        queue.collection.remove({}, done);
-    });
-
-    describe('with a timeout', function() {
-        it('enqueues', function(done) {
-            queue.enqueue('timeoutTest', { test: 'data' }, { timeout: 10 }, done);
+    describe('worker processing job with a timeout', function () {
+        beforeEach(function (done) {
+            queue.enqueue('timeout', {}, { timeout: 10 }, done);
         });
 
-        it('emits failed once', function(done) {
-            (function finished() {
-                if (failHandler.calledOnce) {
-                    done();
-                } else {
-                    setTimeout(finished, 10);
-                }
-            })();
+        beforeEach(function (done) {
+            helpers.flushWorker(worker, done);
         });
 
-        it('calls the handler once', function() {
-            assert.ok(handler.calledOnce);
+        it('calls the handler once', function () {
+            assert.equal(handler.callCount, 1);
         });
 
-        it('updates the job status', function() {
-            var job = failHandler.lastCall.args[0];
+        it('emits `failed` event once', function () {
+            assert.equal(failed.callCount, 1);
+        });
+
+        it('updates the job status', function () {
+            var job = failed.lastCall.args[0];
 
             assert.equal(job.status, 'failed');
             assert.equal(job.error, 'Timed out');
         });
     });
-});
 
-describe('job', function() {
-    var queue, handler, worker, failHandler;
-
-    before(function(done) {
-        queue = new Queue({ db: helpers.db });
-
-        handler = sinon.spy(
-            function(params, callback) {
-                //Don't call the callback, let it time out
-            }
-        );
-
-        failHandler = sinon.spy();
-
-        worker = new Worker([ queue ], { interval: 10 });
-        worker.register({ timeoutTest: handler });
-        worker.start();
-
-        worker.on('failed', failHandler);
-
-        queue.collection.remove({}, done);
-    });
-
-    after(function(done) {
-        worker.stop(done);
-    });
-
-    after(function(done) {
-        queue.collection.remove({}, done);
-    });
-
-    describe('with a timeout and retries', function() {
-        it('enqueues', function(done) {
-            queue.enqueue('timeoutTest', { test: 'data' }, { timeout: 10, attempts: { count: 3 } }, done);
+    describe('worker processing job with a timeout and retries', function () {
+        beforeEach(function (done) {
+            queue.enqueue('timeout', {}, { timeout: 10, attempts: { count: 3 }}, done);
         });
 
-        it('emits failed three times', function(done) {
-            (function hasFinished() {
-                if (failHandler.calledThrice) {
-                    done();
-                } else {
-                    setTimeout(hasFinished, 10);
-                }
-            })();
+        beforeEach(function (done) {
+            helpers.flushWorker(worker, done);
         });
 
-        it('calls the handler three times', function() {
-            assert.ok(handler.calledThrice);
+        it('calls the handler three times', function () {
+            assert.equal(handler.callCount, 3);
         });
 
-        it('updates the job status', function() {
-            var job = failHandler.lastCall.args[0];
+        it('updates the job status', function () {
+            var job = failed.lastCall.args[0];
 
             assert.equal(job.status, 'failed');
             assert.equal(job.error, 'Timed out');
