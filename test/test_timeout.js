@@ -46,7 +46,7 @@ describe('Timeout', function () {
             var job = failed.lastCall.args[0];
 
             assert.equal(job.status, 'failed');
-            assert.equal(job.error, 'Timed out');
+            assert.equal(job.error, 'timeout');
         });
     });
 
@@ -67,7 +67,7 @@ describe('Timeout', function () {
             var job = failed.lastCall.args[0];
 
             assert.equal(job.status, 'failed');
-            assert.equal(job.error, 'Timed out');
+            assert.equal(job.error, 'timeout');
         });
     });
 });
