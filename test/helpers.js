@@ -13,7 +13,7 @@ exports.each = function (fixture, fn, done) {
 
 exports.flushWorker = function (worker, done) {
     worker.start();
-    worker.on('empty', function () {
+    worker.once('empty', function () {
         worker.stop(done);
     });
 };

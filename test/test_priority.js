@@ -25,15 +25,12 @@ describe('Priority', function () {
         beforeEach(function (done) {
             worker = new Worker([queue], { interval: 1 });
             worker.register({ priority: handler });
-            worker.start();
 
             helpers.each(jobs, queue.enqueue.bind(queue), done);
         });
 
         beforeEach(function (done) {
-            worker.on('empty', function () {
-                worker.stop(done);
-            });
+            helpers.flushWorker(worker, done);
         });
 
         it('calls handler once for each job', function () {
@@ -53,15 +50,12 @@ describe('Priority', function () {
         beforeEach(function (done) {
             worker = new Worker([queue], { interval: 1, minPriority: 1 });
             worker.register({ priority: handler });
-            worker.start();
 
             helpers.each(jobs, queue.enqueue.bind(queue), done);
         });
 
         beforeEach(function (done) {
-            worker.on('empty', function () {
-                worker.stop(done);
-            });
+            helpers.flushWorker(worker, done);
         });
 
         it('calls handler once for each job with sufficient priority', function () {

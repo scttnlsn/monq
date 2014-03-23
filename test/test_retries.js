@@ -1,6 +1,7 @@
 var assert = require('assert');
 var sinon = require('sinon');
 var helpers = require('./helpers');
+var Job = require('../lib/job');
 var Queue = require('../lib/queue');
 var Worker = require('../lib/worker');
 
@@ -16,7 +17,7 @@ describe('Retries', function () {
 
         failed = sinon.spy();
 
-        worker = new Worker([queue], { interval: 1 });
+        worker = new Worker([queue], { interval: 10 });
         worker.register({ retry: handler });
         worker.on('failed', failed);
     });
@@ -52,12 +53,15 @@ describe('Retries', function () {
     });
 
     describe('worker retrying job with delay', function () {
+        var start;
+
         beforeEach(function (done) {
-            queue.enqueue('retry', {}, { attempts: { count: 3, delay: 10 } }, done);
+            queue.enqueue('retry', {}, { attempts: { count: 3, delay: 100 } }, done);
         });
 
         describe('after first attempt', function () {
             beforeEach(function (done) {
+                start = new Date();
                 helpers.flushWorker(worker, done);
             });
 
@@ -69,20 +73,38 @@ describe('Retries', function () {
                 assert.equal(failed.callCount, 1);
             });
 
-            it('re-enqueues job', function () {
+            it('re-enqueues job with delay', function () {
                 var data = failed.lastCall.args[0];
                 assert.equal(data.status, 'queued');
+                assert.ok(new Date(data.delay).getTime() >= start.getTime() + 100);
+            });
+
+            it('does not immediately dequeue job', function (done) {
+                helpers.flushWorker(worker, function () {
+                    assert.equal(handler.callCount, 1);
+                    done();
+                });
             });
         });
 
         describe('after all attempts', function () {
-            beforeEach(function (done) {
-                worker.start();
+            var delay;
 
-                // wait for all attempts
-                setTimeout(function () {
-                    worker.stop(done);
-                }, 50);
+            beforeEach(function () {
+                delay = sinon.stub(Job.prototype, 'delay', function (delay, callback) {
+                    assert.equal(delay, 100);
+
+                    this.data.delay = new Date();
+                    this.enqueue(callback);
+                });
+            });
+
+            beforeEach(function (done) {
+                helpers.flushWorker(worker, done);
+            });
+
+            afterEach(function () {
+                delay.restore();
             });
 
             it('calls the handler once for each retry', function () {
