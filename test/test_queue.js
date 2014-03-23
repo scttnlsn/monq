@@ -21,6 +21,7 @@ describe('queue', function() {
             queue.enqueue('foo', { bar: 'baz' }, function(err, j) {
                 job = j;
                 if (err) return done(err);
+                
                 queue.enqueue('foo2', { bar: 'baz' }, { delay: new Date(0) }, function(err, j2) {
                     if (err) return done(err);
                     job2 = j2;
@@ -56,9 +57,9 @@ describe('queue', function() {
             assert.equal(job.data.status, 'queued');
         });
 
-        it('can be gotten', function(done){
-            queue.fetchJob(job.data._id, function(err, fetchedJob){
-                if(err) return done(err);
+        it('can be gotten', function(done) {
+            queue.fetchJob(job.data._id, function(err, fetchedJob) {
+                if (err) return done(err);
 
                 assert.ok(fetchedJob);
                 assert.equal(fetchedJob.data._id.toString(), job.data._id.toString());
@@ -67,9 +68,9 @@ describe('queue', function() {
             });
         });
 
-        it('can be gotten by string id', function(done){
-            queue.fetchJob(job.data._id.toString(), function(err, fetchedJob){
-                if(err) return done(err);
+        it('can be gotten by string id', function(done) {
+            queue.fetchJob(job.data._id.toString(), function(err, fetchedJob) {
+                if (err) return done(err);
 
                 assert.ok(fetchedJob);
                 assert.equal(fetchedJob.data._id.toString(), job.data._id.toString());

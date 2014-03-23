@@ -8,13 +8,11 @@ describe('job', function() {
     var queue, handler, worker, failHandler;
 
     before(function(done) {
-        queue = new Queue({ db: helpers.db }, { timeoutInterval: false });
+        queue = new Queue({ db: helpers.db });
 
-        handler = sinon.spy(
-            function(params, callback){
-                //Don't call the callback, let it time out
-            }
-        );
+        handler = sinon.spy(function(params, callback) {
+            // Don't call the callback, let it time out
+        });
 
         failHandler = sinon.spy();
 
@@ -27,34 +25,34 @@ describe('job', function() {
         queue.collection.remove({}, done);
     });
 
-    after(function(done){
+    after(function(done) {
         worker.stop(done);
     });
 
-    after(function(done){
+    after(function(done) {
         queue.collection.remove({}, done);
     });
 
-    describe('with a timeout', function(){
-        it('enqueues', function(done){
-            queue.enqueue('timeoutTest', { test: 'data' }, { timeoutMS: 10 }, done);
+    describe('with a timeout', function() {
+        it('enqueues', function(done) {
+            queue.enqueue('timeoutTest', { test: 'data' }, { timeout: 10 }, done);
         });
 
-        it('emits failed once', function(done){
-            (function hasFinished(){
-                if(failHandler.calledOnce){
+        it('emits failed once', function(done) {
+            (function finished() {
+                if (failHandler.calledOnce) {
                     done();
                 } else {
-                    setTimeout(hasFinished, 10);
+                    setTimeout(finished, 10);
                 }
             })();
         });
 
-        it('calls the handler once', function(){
+        it('calls the handler once', function() {
             assert.ok(handler.calledOnce);
         });
 
-        it('updates the job status', function(){
+        it('updates the job status', function() {
             var job = failHandler.lastCall.args[0];
 
             assert.equal(job.status, 'failed');
@@ -67,10 +65,10 @@ describe('job', function() {
     var queue, handler, worker, failHandler;
 
     before(function(done) {
-        queue = new Queue({ db: helpers.db }, { timeoutInterval: false });
+        queue = new Queue({ db: helpers.db });
 
         handler = sinon.spy(
-            function(params, callback){
+            function(params, callback) {
                 //Don't call the callback, let it time out
             }
         );
@@ -86,22 +84,22 @@ describe('job', function() {
         queue.collection.remove({}, done);
     });
 
-    after(function(done){
+    after(function(done) {
         worker.stop(done);
     });
 
-    after(function(done){
+    after(function(done) {
         queue.collection.remove({}, done);
     });
 
-    describe('with a timeout and retries', function(){
-        it('enqueues', function(done){
-            queue.enqueue('timeoutTest', { test: 'data' }, { timeoutMS: 10, attempts: { count: 3 } }, done);
+    describe('with a timeout and retries', function() {
+        it('enqueues', function(done) {
+            queue.enqueue('timeoutTest', { test: 'data' }, { timeout: 10, attempts: { count: 3 } }, done);
         });
 
-        it('emits failed three times', function(done){
-            (function hasFinished(){
-                if(failHandler.calledThrice){
+        it('emits failed three times', function(done) {
+            (function hasFinished() {
+                if (failHandler.calledThrice) {
                     done();
                 } else {
                     setTimeout(hasFinished, 10);
@@ -109,11 +107,11 @@ describe('job', function() {
             })();
         });
 
-        it('calls the handler three times', function(){
+        it('calls the handler three times', function() {
             assert.ok(handler.calledThrice);
         });
 
-        it('updates the job status', function(){
+        it('updates the job status', function() {
             var job = failHandler.lastCall.args[0];
 
             assert.equal(job.status, 'failed');

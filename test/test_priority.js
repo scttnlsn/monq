@@ -11,7 +11,7 @@ describe('job', function() {
         queue = new Queue({ db: helpers.db });
 
         handler = sinon.spy(
-            function(params, callback){
+            function(params, callback) {
                 callback();
             }
         );
@@ -22,54 +22,54 @@ describe('job', function() {
         queue.collection.remove({}, done);
     });
 
-    after(function(done){
+    after(function(done) {
         worker.stop(done);
     });
 
-    after(function(done){
+    after(function(done) {
         queue.collection.remove({}, done);
     });
 
-    describe('with priority', function(){
-        it('enqueues a negative 2 priority job', function(done){
+    describe('with priority', function() {
+        it('enqueues a negative 2 priority job', function(done) {
             queue.enqueue('priority', { data: 'negative-priority-2' }, { priority: -2 }, done);
         });
 
-        it('enqueues a negative 1 priority job', function(done){
+        it('enqueues a negative 1 priority job', function(done) {
             queue.enqueue('priority', { data: 'negative-priority-1-1' }, { priority: -1 }, done);
         });
 
-        it('enqueues a negative 1 priority job', function(done){
+        it('enqueues a negative 1 priority job', function(done) {
             queue.enqueue('priority', { data: 'negative-priority-1-2' }, { priority: -1 }, done);
         });
 
-        it('enqueues a default priority job', function(done){
+        it('enqueues a default priority job', function(done) {
             queue.enqueue('priority', { data: 'priority-default-1' }, done);
         });
 
-        it('enqueues a default priority job', function(done){
+        it('enqueues a default priority job', function(done) {
             queue.enqueue('priority', { data: 'priority-default-2' }, done);
         });
 
-        it('enqueues a priority 0 job', function(done){
+        it('enqueues a priority 0 job', function(done) {
             queue.enqueue('priority', { data: 'priority-0-1' }, { priority: 0 }, done);
         });
 
-        it('enqueues a priority 0 job', function(done){
+        it('enqueues a priority 0 job', function(done) {
             queue.enqueue('priority', { data: 'priority-0-2' }, { priority: 0 }, done);
         });
 
-        it('enqueues a priority 1 job', function(done){
+        it('enqueues a priority 1 job', function(done) {
             queue.enqueue('priority', { data: 'priority-1' }, { priority: 1 }, done);
         });
 
-        it('starts working', function(){
+        it('starts working', function() {
             worker.start();
         });
 
-        it('calls the handler 5 times', function(done){
-            (function hasFinished(){
-                if(handler.callCount === 8){
+        it('calls the handler 5 times', function(done) {
+            (function hasFinished() {
+                if (handler.callCount === 8) {
                     done();
                 } else {
                     setTimeout(hasFinished, 10);
@@ -77,7 +77,7 @@ describe('job', function() {
             })();
         });
 
-        it('processes the jobs in the correct order', function(){
+        it('processes the jobs in the correct order', function() {
             assert.equal(handler.args[0][0].data, 'priority-1');
             assert.equal(handler.args[1][0].data, 'priority-default-1');
             assert.equal(handler.args[2][0].data, 'priority-default-2');
@@ -97,7 +97,7 @@ describe('worker', function() {
         queue = new Queue({ db: helpers.db });
 
         handler = sinon.spy(
-            function(params, callback){
+            function(params, callback) {
                 callback();
             }
         );
@@ -108,42 +108,42 @@ describe('worker', function() {
         queue.collection.remove({}, done);
     });
 
-    after(function(done){
+    after(function(done) {
         worker.stop(done);
     });
 
-    after(function(done){
+    after(function(done) {
         queue.collection.remove({}, done);
     });
 
-    describe('with minimum priority', function(){
-        it('enqueues a negative 1 priority job', function(done){
+    describe('with minimum priority', function() {
+        it('enqueues a negative 1 priority job', function(done) {
             queue.enqueue('priority', { data: 'negative-priority' }, { priority: -1 }, done);
         });
 
-        it('enqueues a default priority job', function(done){
+        it('enqueues a default priority job', function(done) {
             queue.enqueue('priority', { data: 'priority-default' }, done);
         });
 
-        it('enqueues a priority 0 job', function(done){
+        it('enqueues a priority 0 job', function(done) {
             queue.enqueue('priority', { data: 'priority-0' }, { priority: 0 }, done);
         });
 
-        it('enqueues a priority 1 job', function(done){
+        it('enqueues a priority 1 job', function(done) {
             queue.enqueue('priority', { data: 'priority-1' }, { priority: 1 }, done);
         });
 
-        it('enqueues a priority 2 job', function(done){
+        it('enqueues a priority 2 job', function(done) {
             queue.enqueue('priority', { data: 'priority-2' }, { priority: 2 }, done);
         });
 
-        it('starts working', function(){
+        it('starts working', function() {
             worker.start();
         });
 
-        it('calls the handler 2 times', function(done){
-            (function hasFinished(){
-                if(handler.calledTwice){
+        it('calls the handler 2 times', function(done) {
+            (function hasFinished() {
+                if (handler.calledTwice) {
                     done();
                 } else {
                     setTimeout(hasFinished, 10);
@@ -151,7 +151,7 @@ describe('worker', function() {
             })();
         });
 
-        it('processes the jobs in the correct order', function(){
+        it('processes the jobs in the correct order', function() {
             assert.equal(handler.args[0][0].data, 'priority-2');
             assert.equal(handler.args[1][0].data, 'priority-1');
         });

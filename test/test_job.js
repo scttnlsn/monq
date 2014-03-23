@@ -115,12 +115,12 @@ describe('Job', function() {
             assert.equal(job.data.error, 'baz');
         });
 
-        it('has a stack', function(){
+        it('has a stack', function() {
             assert.ok(job.data.stack);
         });
     });
 
-    describe('when cancelling a queued job', function(){
+    describe('when cancelling a queued job', function() {
         var job, save;
 
         beforeEach(function(done) {
@@ -128,23 +128,23 @@ describe('Job', function() {
             job.cancel(done);
         });
 
-        it('is cancelled', function(){
+        it('is cancelled', function() {
             assert.equal(job.data.status, 'cancelled');
         });
     });
 
-    describe('when cancelling a complete job', function(){
+    describe('when cancelling a complete job', function() {
         var job, error;
 
         beforeEach(function(done) {
             job = new Job(collection, { foo: 'bar', status: 'complete' });
-            job.cancel(function(err){
+            job.cancel(function(err) {
                 error = err;
                 done();
             });
         });
 
-        it('is cancelled', function(){
+        it('is cancelled', function() {
             assert.equal(job.data.status, 'complete');
             assert.equal(error.message, 'Only queued jobs may be cancelled');
         });

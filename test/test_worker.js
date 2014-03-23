@@ -126,8 +126,8 @@ describe('Worker', function() {
         describe('when stopping with a job in progress', function() {
             var dequeueStubs;
 
-            beforeEach(function(){
-                dequeueStubs = worker.queues.map(function(queue){
+            beforeEach(function() {
+                dequeueStubs = worker.queues.map(function(queue) {
                     return sinon.stub(queue, 'dequeue').yieldsAsync(null, job);
                 });
 
@@ -138,10 +138,10 @@ describe('Worker', function() {
                 worker.work(job);
             });
 
-            it('waits for the job to finish', function(done){
+            it('waits for the job to finish', function(done) {
                 assert.ok(worker.working);
 
-                worker.stop(function(){
+                worker.stop(function() {
                     assert.ok(!worker.working);
 
                     assert.ok(dequeueStubs[0].calledOnce);
@@ -159,18 +159,18 @@ describe('Worker', function() {
         describe('when stopping during an empty dequeue', function() {
             var dequeueStubs;
 
-            beforeEach(function(){
-                dequeueStubs = worker.queues.map(function(queue){
+            beforeEach(function() {
+                dequeueStubs = worker.queues.map(function(queue) {
                     return sinon.stub(queue, 'dequeue').yieldsAsync(null, null);
                 });
 
                 worker.start();
             });
 
-            it('stops cleanly', function(done){
+            it('stops cleanly', function(done) {
                 assert.ok(worker.working);
 
-                worker.stop(function(){
+                worker.stop(function() {
                     assert.ok(!worker.working);
 
                     assert.ok(dequeueStubs[0].called);
@@ -188,19 +188,19 @@ describe('Worker', function() {
         describe('when stopping between polls', function() {
             var dequeueStubs;
 
-            beforeEach(function(){
-                dequeueStubs = worker.queues.map(function(queue){
+            beforeEach(function() {
+                dequeueStubs = worker.queues.map(function(queue) {
                     return sinon.stub(queue, 'dequeue').yieldsAsync(null, null);
                 });
 
                 worker.start();
             });
 
-            it('stops cleanly', function(done){
+            it('stops cleanly', function(done) {
                 assert.ok(worker.working);
 
-                worker.once('empty-dequeue', function(){
-                    worker.stop(function(){
+                worker.once('empty-dequeue', function() {
+                    worker.stop(function() {
                         assert.ok(!worker.working);
 
                         assert.ok(dequeueStubs[0].called);
@@ -219,16 +219,16 @@ describe('Worker', function() {
         describe('when stopping twice', function() {
             var dequeueStubs;
 
-            beforeEach(function(){
-                dequeueStubs = worker.queues.map(function(queue){
+            beforeEach(function() {
+                dequeueStubs = worker.queues.map(function(queue) {
                     return sinon.stub(queue, 'dequeue').yieldsAsync(null, null);
                 });
 
                 worker.start();
             });
 
-            it('does not error', function(done){
-                worker.stop(function(){
+            it('does not error', function(done) {
+                worker.stop(function() {
                     worker.stop();
                     done();
                 })
