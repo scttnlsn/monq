@@ -18,7 +18,7 @@ Enqueue jobs by supplying a job name and a set of parameters.  Below, the job `r
 ```javascript
 var queue = client.queue('example');
 
-queue.enqueue('reverse', { text: 'foobar' }, function(err, job) {
+queue.enqueue('reverse', { text: 'foobar' }, function (err, job) {
     console.log('enqueued:', job.data);
 });
 ```
@@ -29,7 +29,7 @@ Create workers to process the jobs from one or more queues.  The functions respo
 var worker = client.worker(['example']);
 
 worker.register({
-    reverse: function(params, callback) {
+    reverse: function (params, callback) {
         try {
             var reversed = params.text.split('').reverse().join('');
             callback(null, reversed);
@@ -48,16 +48,11 @@ Events
 Workers will emit various events while processing jobs:
 
 ```javascript
-worker.on('dequeued', function(data) { … });
-worker.on('failed', function(data) { … });
-worker.on('complete', function(data) { … });
-worker.on('error', function(err) { … });
+worker.on('dequeued', function (data) { … });
+worker.on('failed', function (data) { … });
+worker.on('complete', function (data) { … });
+worker.on('error', function (err) { … });
 ```
-    
-API
----
-
-More detailed API docs soon.
     
 Install
 -------
