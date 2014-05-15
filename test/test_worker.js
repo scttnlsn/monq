@@ -116,8 +116,8 @@ describe('Worker', function () {
                 worker.start();
 
                 var poll = sinon.spy(worker, 'poll');
-                worker.stop();
                 clock.tick(worker.interval);
+                worker.stop();
 
                 assert.ok(poll.calledOnce);
             });
