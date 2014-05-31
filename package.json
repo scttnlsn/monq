@@ -16,7 +16,7 @@
     },
 
     "dependencies": {
-        "mongoskin": "0.6.1"
+        "mongoskin": "1.4.4"
     },
 
     "devDependencies": {
