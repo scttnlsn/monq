@@ -13,7 +13,7 @@
     "url": "git://github.com/scttnlsn/monq.git"
   },
   "dependencies": {
-    "mongodb": "^2.0.44",
+    "mongodb": "~2.0.44",
     "mongoskin": "^2.0.0"
   },
   "devDependencies": {
