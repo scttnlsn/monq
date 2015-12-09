@@ -32,7 +32,7 @@ describe('Job', function () {
         });
 
         it('is inserted into collection', function (done) {
-            collection.findById(job.data._id, function (err, doc) {
+            collection.findOne({ _id : job.data._id }, function (err, doc) {
                 if (err) return done(err);
 
                 assert.ok(doc);
@@ -43,7 +43,7 @@ describe('Job', function () {
         });
 
         it('contains a string id', function (done) {
-            collection.findById(job.data._id, function (err, doc) {
+            collection.findOne({ _id : job.data._id }, function (err, doc) {
                 if (err) return done(err);
 
                 assert.equal(doc._id.toString(), job.data.id);
