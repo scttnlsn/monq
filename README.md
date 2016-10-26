@@ -72,3 +72,8 @@ Tests
 You can optionally specify the MongoDB URI to be used for tests:
 
     MONGODB_URI=mongodb://localhost:27017/monq_tests npm test
+
+Updating API documentation
+--------------------------
+
+`npm run jsdoc2md`
