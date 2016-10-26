@@ -6,6 +6,8 @@ Monq is a MongoDB-backed job queue for Node.js.
 [![NPM](https://img.shields.io/npm/v/monq.svg?style=flat)](http://npm.im/monq)
 [![Build Status](https://img.shields.io/travis/scttnlsn/monq.svg?style=flat)](https://travis-ci.org/scttnlsn/monq)
 
+[API Reference](API.md)
+
 Usage
 -----
 
@@ -70,3 +72,8 @@ Tests
 You can optionally specify the MongoDB URI to be used for tests:
 
     MONGODB_URI=mongodb://localhost:27017/monq_tests npm test
+
+Updating API documentation
+--------------------------
+
+`npm run jsdoc2md`
